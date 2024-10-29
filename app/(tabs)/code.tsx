@@ -1,8 +1,7 @@
 import { StyleSheet, View } from "react-native";
+import { useState } from "react";
 
 import { ThemedText } from "@/components/ThemedText";
-import { useThemeColor } from "@/hooks/useThemeColor";
-
 import { OctaveCircle } from "@/components/OctaveCircle";
 
 export default function HomeScreen() {
@@ -20,8 +19,10 @@ export default function HomeScreen() {
     "A#",
     "B",
   ];
+  const [root, setRoot] = useState("C");
+
   return (
-    <View>
+    <View style={styles.container}>
       <ThemedText>BPM:120</ThemedText>
       <ThemedText>メジャー</ThemedText>
       <OctaveCircle notes={notes} />
@@ -30,9 +31,8 @@ export default function HomeScreen() {
 }
 
 const styles = StyleSheet.create({
-  titleContainer: {
-    flexDirection: "row",
+  container: {
     alignItems: "center",
-    gap: 8,
+    justifyContent: "center",
   },
 });
