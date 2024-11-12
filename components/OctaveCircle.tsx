@@ -4,38 +4,65 @@ import {
   View,
   Animated,
   TouchableOpacity,
-  Dimensions,
 } from "react-native";
-
-import { useState, useRef, useEffect } from "react";
-
+import { useRef, useEffect } from "react";
 import { useThemeColor } from "@/hooks/useThemeColor";
 
 interface Props {
   notes: string[];
+  onNoteSelect: (note: string) => void;
+  root: string | null;
+  scaleNotes: string[] | null;
+  chordProgression: number[];
+  setChordProgression: (chord: number[]) => void;
 }
 
-export function OctaveCircle({ notes }: Props) {
-  const circleColor = useThemeColor({}, "circle");
+export function OctaveCircle({
+  notes,
+  onNoteSelect,
+  root,
+  scaleNotes,
+  chordProgression,
+  setChordProgression,
+}: Props) {
   const circleTextColor = useThemeColor({}, "circleText");
 
-  const [selectedNote, setSelectedNote] = useState<string | null>(null);
+  // ダブルタップの検出に使用
+  const lastTap = useRef<number | null>(null);
+
+  // rotationのアニメーション値
   const rotation = useRef(new Animated.Value(0)).current;
 
+  // 前回のルート音のインデックスを保持
+  const previousIndex = useRef<number>(notes.indexOf(root ? root : "C"));
+
+  // 累積の回転角度を保持
+  const accumulatedRotation = useRef(0);
+
   useEffect(() => {
-    if (selectedNote !== null) {
-      const index = notes.indexOf(selectedNote);
-      if (index !== -1) {
-        const angle = (360 / notes.length) * index;
-        const toValue = -angle;
-        Animated.timing(rotation, {
-          toValue,
-          duration: 500,
-          useNativeDriver: true,
-        }).start();
-      }
-    }
-  }, [selectedNote, notes, rotation]);
+    const currentIndex = notes.indexOf(root ? root : "C");
+    const anglePerNote = 360 / notes.length;
+    const angleDifference =
+      ((currentIndex - previousIndex.current + notes.length) % notes.length) *
+      anglePerNote;
+
+    // 最短距離で回転するように調整
+    let shortestAngle =
+      angleDifference > 180 ? angleDifference - 360 : angleDifference;
+
+    // 累積回転角度を更新
+    accumulatedRotation.current -= shortestAngle;
+
+    // 回転角度を更新
+    Animated.timing(rotation, {
+      toValue: accumulatedRotation.current,
+      duration: 500,
+      useNativeDriver: true,
+    }).start();
+
+    // 前回のインデックスを更新
+    previousIndex.current = currentIndex;
+  }, [root]);
 
   const animatedStyle = {
     transform: [
@@ -53,42 +80,76 @@ export function OctaveCircle({ notes }: Props) {
     outputRange: ["360deg", "0deg", "-360deg"],
   });
 
-  // 円のサイズに基づいて半径を計算
-  const circleSize = 380;
-  const radius = circleSize / 2 - 50; // パディングとして50を調整
+  // ダブルタップの処理
+  const handleDoubleTap = (note: string) => {
+    const now = Date.now();
+    if (lastTap.current && now - lastTap.current < 300) {
+      // ダブルタップとみなす
+      onNoteSelect(note);
+    }
+    lastTap.current = now;
+  };
 
   return (
     <View style={styles.container}>
-      <Animated.View
-        style={[styles.circle, { backgroundColor: circleColor }, animatedStyle]}
-      >
+      <Animated.View style={[styles.circle, animatedStyle]}>
         {notes.map((note, index) => {
-          // 各音階の角度を計算
-          const angle = (360 / notes.length) * index;
+          // 各音符の角度を計算
+          const angle = (360 / notes.length) * index - 90;
           const rad = (angle * Math.PI) / 180;
 
           // xとyの位置を計算
-          const x = radius * Math.cos(rad);
-          const y = radius * Math.sin(rad);
+          const x = 125 * Math.cos(rad);
+          const y = 125 * Math.sin(rad);
 
           return (
             <TouchableOpacity
               key={note}
-              onPress={() => setSelectedNote(note)}
+              onLongPress={() => {
+                if (scaleNotes?.includes(note)) {
+                  const newChordProgression = chordProgression.concat(
+                    scaleNotes.indexOf(note)
+                  );
+                  if (newChordProgression.length <= 8) {
+                    setChordProgression(newChordProgression);
+                  } else {
+                    alert("最大8個まで");
+                  }
+                } else if (!root) {
+                  alert("ルートを選んで");
+                } else {
+                  alert("スケール外です");
+                }
+              }}
+              onPress={() => handleDoubleTap(note)}
               activeOpacity={0.7}
               style={[
                 styles.noteContainer,
                 {
                   position: "absolute",
-                  left: circleSize / 2 + x - 20, // 20はテキスト幅の半分
-                  top: circleSize / 2 + y - 20, // 20はテキスト高さの半分
+                  left: 160 + x - 25,
+                  top: 160 + y - 25,
                 },
               ]}
             >
               <Animated.View
                 style={{ transform: [{ rotate: inverseRotation }] }}
               >
-                <Text style={[styles.text, { color: circleTextColor }]}>
+                <Text
+                  style={[
+                    styles.text,
+                    {
+                      color:
+                        scaleNotes === null
+                          ? circleTextColor
+                          : note === root
+                          ? "#5B9CC0" // ルート音の色
+                          : scaleNotes.includes(note)
+                          ? circleTextColor // 薄く表示する音の色
+                          : "#A0A0A0", // デフォルトの色
+                    },
+                  ]}
+                >
                   {note}
                 </Text>
               </Animated.View>
@@ -105,21 +166,27 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
   },
-  circle: {
-    width: 380,
-    height: 380,
-    borderRadius: 190,
+  noteContainer: {
     alignItems: "center",
     justifyContent: "center",
   },
-  noteContainer: {
-    width: 50, // テキストサイズに基づいて調整
-    height: 50, // テキストサイズに基づいて調整
+  circle: {
+    width: 320,
+    height: 320,
+    borderRadius: 160,
     alignItems: "center",
     justifyContent: "center",
+    // paddingTop: 10,
+    // paddingBottom: 10,
+    // paddingLeft: 10,
+    // paddingRight: 10,
+    position: "relative",
   },
   text: {
-    fontSize: 36, // 好みに応じて調整
+    width: 50,
+    height: 50,
+    fontSize: 36,
+    fontWeight: "bold",
     textAlign: "center",
   },
 });
