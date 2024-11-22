@@ -1,15 +1,12 @@
-import React, { useState } from "react";
+import React, { useState, useContext } from "react";
 import { View, TextInput, StyleSheet, Keyboard } from "react-native";
 import { ThemedText } from "./ThemedText";
-import { useThemeColor } from "@/hooks/useThemeColor";
+import { ChordContext } from "@/ChordContext";
+import { Colors } from "@/constants/Colors";
 
-interface Props {
-  bpm: number;
-  setBpm: (num: number) => void;
-}
-
-export const Bpm = ({ bpm, setBpm }: Props) => {
-  const textColor = useThemeColor({}, "text");
+export const Bpm = () => {
+  const { bpm, setBpm } = useContext(ChordContext);
+  const textColor = Colors.dark.text;
 
   const [tempValue, setTempValue] = useState(String(bpm));
   const [errorMessage, setErrorMessage] = useState<string | null>(null);

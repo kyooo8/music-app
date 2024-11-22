@@ -1,4 +1,5 @@
-import React, { useState } from "react";
+import React, { useState, useContext } from "react";
+import { ChordContext } from "@/ChordContext";
 import {
   View,
   Text,
@@ -7,12 +8,8 @@ import {
   Animated,
 } from "react-native";
 
-interface Props {
-  scaleType: "メジャー" | "マイナー";
-  setScaleType: (scale: "メジャー" | "マイナー") => void;
-}
-
-export const ToggleButton = ({ scaleType, setScaleType }: Props) => {
+export const ToggleButton = () => {
+  const { scaleType, setScaleType } = useContext(ChordContext);
   const [isEnabled, setIsEnabled] = useState(false);
   const togglePosition = useState(new Animated.Value(0))[0];
 

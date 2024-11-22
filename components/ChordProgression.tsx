@@ -1,145 +1,129 @@
-import { StyleSheet, View, TouchableOpacity, Alert } from "react-native";
-import { useThemeColor } from "@/hooks/useThemeColor";
-import { useEffect, useState } from "react";
+// ChordProgression.tsx
+import React, { useEffect, useState, useCallback, useContext } from "react";
+import { StyleSheet, View, TouchableOpacity, FlatList } from "react-native";
+import { ChordContext } from "@/ChordContext";
 import { ThemedText } from "@/components/ThemedText";
 import Icon from "./Icon";
-import DraggableFlatList, {
-  RenderItemParams,
-} from "react-native-draggable-flatlist";
-
-interface Props {
-  scaleNotes: string[] | null;
-  chordProgression: number[];
-  setChordPorgression: React.Dispatch<React.SetStateAction<number[]>>;
-}
+import { v4 as uuidv4 } from "uuid"; // UUIDのインポート
+import { Colors } from "@/constants/Colors";
 
 interface ChordItem {
-  key: string;
+  id: string;
   chordIndex: number;
-  index: number;
 }
 
-export function ChordProgression({
-  scaleNotes,
-  chordProgression,
-  setChordPorgression,
-}: Props) {
-  const [showPlusSet, setShowPlusSet] = useState<Set<number>>(new Set());
+export function ChordProgression() {
+  const { scaleNotes, chordProgression, setChordProgression } =
+    useContext(ChordContext);
+  const [showPlusIndices, setShowPlusIndices] = useState<number[]>([]);
 
-  const bg = useThemeColor({}, "ChordProgression");
+  const bg = Colors.dark.tab;
 
-  // ドラッグ可能なデータに変換
+  // Initialize data with unique IDs using UUID
   const [data, setData] = useState<ChordItem[]>(
-    chordProgression.map((chord, index) => ({
-      key: `${index}`, // 一意のキー
+    chordProgression.map((chord) => ({
+      id: uuidv4(),
       chordIndex: chord,
-      index: index,
     }))
   );
 
   useEffect(() => {
-    // chordProgressionが変更されたときにdataを更新
+    // Sync data with chordProgression changes
     setData(
-      chordProgression.map((chord, index) => ({
-        key: `${index}`,
+      chordProgression.map((chord) => ({
+        id: uuidv4(),
         chordIndex: chord,
-        index: index,
       }))
     );
-    setShowPlusSet(new Set());
+    setShowPlusIndices([]);
   }, [chordProgression, scaleNotes]);
 
-  // ドラッグ終了時のハンドラー
-  const handleDragEnd = ({ data }: { data: ChordItem[] }) => {
-    setData(data);
-    // chordProgressionを更新
-    setChordPorgression(data.map((item) => item.chordIndex));
-  };
-
-  // 長押しでプラスボタンを表示
-  function handleLongPress(index: number) {
-    setShowPlusSet((prev) => {
-      const newSet = new Set(prev);
-      if (newSet.has(index)) {
-        newSet.delete(index);
+  // Toggle visibility of plus buttons
+  const handleLongPress = useCallback((index: number) => {
+    setShowPlusIndices((prev) => {
+      if (prev.includes(index)) {
+        return prev.filter((i) => i !== index);
       } else {
-        newSet.add(index);
+        return [...prev, index];
       }
-      return newSet;
     });
-  }
+  }, []);
 
-  // コードの追加
-  function handleAddChord(index: number) {
-    setChordPorgression((prev) => [
-      ...prev.slice(0, index + 1),
-      prev[index], // 同じコードを追加
-      ...prev.slice(index + 1),
-    ]);
-  }
+  // Add a chord after the specified index
+  const handleAddChord = useCallback(
+    (index: number) => {
+      setChordProgression((prev) => {
+        const newChord = prev[index];
+        const newProgression = [
+          ...prev.slice(0, index + 1),
+          newChord,
+          ...prev.slice(index + 1),
+        ];
+        return newProgression;
+      });
+    },
+    [setChordProgression]
+  );
 
-  // コードの削除
-  function deleteChord(index: number) {
-    setChordPorgression((prev) => prev.filter((_, i) => i !== index));
-    setData((prev) => prev.filter((item) => item.index !== index));
-  }
+  // Delete the chord at the specified index
+  const deleteChord = useCallback(
+    (index: number) => {
+      setChordProgression((prev) => prev.filter((_, i) => i !== index));
+      setData((prev) => prev.filter((_, i) => i !== index));
+    },
+    [setChordProgression]
+  );
+
+  // Render item without drag functionality
+  const renderItem = useCallback(
+    ({ item, index }: { item: ChordItem; index: number }) => {
+      const isShowPlus = showPlusIndices.includes(index);
+
+      return (
+        <TouchableOpacity
+          style={styles.chordCard}
+          onLongPress={() => handleLongPress(index)}
+          activeOpacity={0.8}
+        >
+          {isShowPlus && (
+            <>
+              <View style={styles.chordSetting}>
+                <TouchableOpacity
+                  onPress={() => deleteChord(index)}
+                  style={styles.settingButton}
+                >
+                  <Icon name="bin2" size={15} color="red" />
+                </TouchableOpacity>
+                <TouchableOpacity
+                  onPress={() => handleAddChord(index)}
+                  style={styles.settingButton}
+                >
+                  <Icon name="plus" size={25} color="green" />
+                </TouchableOpacity>
+              </View>
+            </>
+          )}
+          <ThemedText type="title">
+            {scaleNotes ? scaleNotes[item.chordIndex] : ""}
+          </ThemedText>
+        </TouchableOpacity>
+      );
+    },
+    [showPlusIndices, handleLongPress, deleteChord, handleAddChord, scaleNotes]
+  );
 
   return (
     <View style={[styles.container, { backgroundColor: bg }]}>
       <ThemedText style={styles.title}>コード進行</ThemedText>
-      <DraggableFlatList
+      <FlatList
         horizontal
         data={data}
         renderItem={renderItem}
-        keyExtractor={(item) => item.key}
-        onDragEnd={handleDragEnd}
+        keyExtractor={(item) => item.id}
         contentContainerStyle={styles.chordProgression}
       />
     </View>
   );
-
-  // 各アイテムのレンダリング関数
-  function renderItem({ item, drag, isActive }: RenderItemParams<ChordItem>) {
-    const index = item.index;
-    const isShowPlus = showPlusSet.has(index);
-
-    return (
-      <TouchableOpacity
-        style={[styles.chordCard, { opacity: isActive ? 0.8 : 1.0 }]}
-        onLongPress={() => {
-          handleLongPress(index);
-        }}
-      >
-        {isShowPlus && (
-          <>
-            <View style={styles.chordSetting}>
-              <TouchableOpacity
-                onPress={() => {
-                  deleteChord(index);
-                }}
-              >
-                <Icon name={"bin2"} size={15} color={"red"} />
-              </TouchableOpacity>
-              <TouchableOpacity onPress={() => handleAddChord(index)}>
-                <Icon name={"plus"} size={25} color={"green"} />
-              </TouchableOpacity>
-            </View>
-            <TouchableOpacity style={styles.change} onPressIn={drag}>
-              <Icon
-                name="change"
-                size={25}
-                color="gray"
-                style={styles.dragHandle}
-              />
-            </TouchableOpacity>
-          </>
-        )}
-        <ThemedText type="title">
-          {scaleNotes ? scaleNotes[item.chordIndex] : ""}
-        </ThemedText>
-      </TouchableOpacity>
-    );
-  }
 }
 
 const styles = StyleSheet.create({
@@ -179,17 +163,9 @@ const styles = StyleSheet.create({
     width: "100%",
     position: "absolute",
     bottom: 0,
-    paddingHorizontal: 2,
+    paddingHorizontal: 5,
   },
-  dragHandle: {
-    position: "absolute",
-    bottom: 5,
-    left: 5,
-  },
-  change: {
-    position: "absolute",
-    top: "50%",
-    zIndex: 1,
-    backgroundColor: "#ffffff",
+  settingButton: {
+    padding: 5,
   },
 });

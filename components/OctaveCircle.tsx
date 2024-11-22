@@ -5,27 +5,20 @@ import {
   Animated,
   TouchableOpacity,
 } from "react-native";
-import { useRef, useEffect } from "react";
-import { useThemeColor } from "@/hooks/useThemeColor";
+import { useRef, useEffect, useContext } from "react";
+import { ChordContext } from "@/ChordContext";
+import { Colors } from "@/constants/Colors";
 
-interface Props {
-  notes: string[];
-  onNoteSelect: (note: string) => void;
-  root: string | null;
-  scaleNotes: string[] | null;
-  chordProgression: number[];
-  setChordProgression: (chord: number[]) => void;
-}
-
-export function OctaveCircle({
-  notes,
-  onNoteSelect,
-  root,
-  scaleNotes,
-  chordProgression,
-  setChordProgression,
-}: Props) {
-  const circleTextColor = useThemeColor({}, "circleText");
+export function OctaveCircle() {
+  const {
+    notes,
+    scaleNotes,
+    setRoot,
+    root,
+    chordProgression,
+    setChordProgression,
+  } = useContext(ChordContext);
+  const circleTextColor = Colors.dark.circleText;
 
   // ダブルタップの検出に使用
   const lastTap = useRef<number | null>(null);
@@ -85,7 +78,7 @@ export function OctaveCircle({
     const now = Date.now();
     if (lastTap.current && now - lastTap.current < 300) {
       // ダブルタップとみなす
-      onNoteSelect(note);
+      setRoot(note);
     }
     lastTap.current = now;
   };

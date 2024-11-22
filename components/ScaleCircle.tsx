@@ -1,14 +1,10 @@
-import React, { useEffect, useRef } from "react";
-import { Animated, Image, StyleSheet } from "react-native";
-import { useColorScheme } from "@/hooks/useColorScheme";
+import React, { useContext, useEffect, useRef } from "react";
+import { Animated, StyleSheet } from "react-native";
+import { ChordContext } from "@/ChordContext";
 
-interface Props {
-  scaleType: "メジャー" | "マイナー";
-}
-
-export function ScaleCircle({ scaleType }: Props) {
+export function ScaleCircle() {
+  const { scaleType, root } = useContext(ChordContext);
   const rotation = useRef(new Animated.Value(0)).current;
-  const theme = useColorScheme() ?? "light";
 
   useEffect(() => {
     // 回転角度を設定する
@@ -20,7 +16,7 @@ export function ScaleCircle({ scaleType }: Props) {
       duration: 300, // アニメーションの長さ（ミリ秒）
       useNativeDriver: true, // パフォーマンス向上のためにネイティブドライバを使用
     }).start();
-  }, [scaleType]);
+  }, [scaleType, root]);
 
   // 回転角度の変換
   const rotationInterpolate = rotation.interpolate({
@@ -28,38 +24,20 @@ export function ScaleCircle({ scaleType }: Props) {
     outputRange: ["0deg", "90deg"],
   });
   return (
-    <Animated.Image
-      source={require("@/assets/images/scale.png")}
-      style={[
-        styles.scaleCircle,
-        {
-          transform: [{ rotate: rotationInterpolate }],
-        },
-      ]}
-    />
+    <>
+      {root && (
+        <Animated.Image
+          source={require("@/assets/images/scale.png")}
+          style={[
+            styles.scaleCircle,
+            {
+              transform: [{ rotate: rotationInterpolate }],
+            },
+          ]}
+        />
+      )}
+    </>
   );
-
-  // return theme === "light" ? (
-  //   <Animated.Image
-  //     source={require("@/assets/images/scale-light.png")}
-  //     style={[
-  //       styles.scaleCircle,
-  //       {
-  //         transform: [{ rotate: rotationInterpolate }],
-  //       },
-  //     ]}
-  //   />
-  // ) : (
-  //   <Animated.Image
-  //     source={require("@/assets/images/scale-dark.png")}
-  //     style={[
-  //       styles.scaleCircle,
-  //       {
-  //         transform: [{ rotate: rotationInterpolate }],
-  //       },
-  //     ]}
-  //   />
-  // );
 }
 
 const styles = StyleSheet.create({

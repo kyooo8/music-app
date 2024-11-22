@@ -1,11 +1,9 @@
-import { StyleSheet, Image, View, useColorScheme } from "react-native";
-import { useEffect, useState, useContext } from "react";
-import { ChordContext } from "@/ChordContext";
-
-import { useThemeColor } from "@/hooks/useThemeColor";
+import { StyleSheet, View } from "react-native";
+import { useEffect, useContext } from "react";
+import { ChordContext, ScaleType } from "@/ChordContext";
+import { Colors } from "@/constants/Colors";
 import { ThemedText } from "@/components/ThemedText";
 import { OctaveCircle } from "@/components/OctaveCircle";
-import { ThemedView } from "@/components/ThemedView";
 import { ScaleCircle } from "@/components/ScaleCircle";
 import { ChordProgression } from "@/components/ChordProgression";
 import { ToggleButton } from "@/components/ToggleBtn";
@@ -13,31 +11,10 @@ import { Bpm } from "@/components/Bpm";
 import { PlayBtn } from "@/components/PlayBtn";
 
 export default function HomeScreen() {
-  const { chordProgression, setChordProgression, root, setRoot } =
+  const { notes, root, setRoot, scaleType, setScaleNotes } =
     useContext(ChordContext);
-  const bg = useThemeColor({}, "background");
-  const bgCircle = useThemeColor({}, "circle");
-
-  const notes = [
-    "C",
-    "C#",
-    "D",
-    "D#",
-    "E",
-    "F",
-    "F#",
-    "G",
-    "G#",
-    "A",
-    "A#",
-    "B",
-  ];
-
-  const [scaleNotes, setScaleNotes] = useState<string[] | null>(null);
-  const [bpm, setBpm] = useState(100);
-  const [scaleType, setScaleType] = useState<"メジャー" | "マイナー">(
-    "メジャー"
-  );
+  const bg = Colors.dark.background;
+  const bgCircle = Colors.dark.circle;
 
   const handleNoteSelect = (note: string) => {
     setRoot(note);
@@ -45,10 +22,7 @@ export default function HomeScreen() {
     setScaleNotes(newScaleNotes);
   };
 
-  const caluculateScaleNotes = (
-    rootNote: string,
-    type: "メジャー" | "マイナー"
-  ) => {
+  const caluculateScaleNotes = (rootNote: string, type: ScaleType) => {
     const rootIndex = notes.indexOf(rootNote);
     const sortedNotes = [
       ...notes.slice(rootIndex),
@@ -80,36 +54,25 @@ export default function HomeScreen() {
       const newScaleNotes = caluculateScaleNotes(root, scaleType);
       setScaleNotes(newScaleNotes);
     }
-  }, [scaleType]);
+  }, [scaleType, root]);
 
   return (
-    <ThemedView style={styles.container}>
+    <View style={[styles.container, { backgroundColor: bg }]}>
       <View style={styles.settingContainer}>
-        <PlayBtn scaleNotes={scaleNotes} chordProgression={chordProgression} />
+        <PlayBtn />
         <View style={{ position: "absolute", right: 10 }}>
-          <Bpm bpm={bpm} setBpm={setBpm} />
-          <ToggleButton scaleType={scaleType} setScaleType={setScaleType} />
+          <Bpm />
+          <ToggleButton />
         </View>
       </View>
       <ThemedText style={styles.rootText}>ルート：{root}</ThemedText>
       <View style={[styles.circle, { backgroundColor: bgCircle }]}>
         <View style={[styles.innerCircle, { backgroundColor: bg }]} />
-        {scaleNotes && <ScaleCircle scaleType={scaleType} />}
-        <OctaveCircle
-          notes={notes}
-          onNoteSelect={handleNoteSelect}
-          chordProgression={chordProgression}
-          setChordProgression={setChordProgression}
-          root={root}
-          scaleNotes={scaleNotes}
-        />
+        <ScaleCircle />
+        <OctaveCircle />
       </View>
-      <ChordProgression
-        scaleNotes={scaleNotes}
-        chordProgression={chordProgression}
-        setChordPorgression={setChordProgression}
-      ></ChordProgression>
-    </ThemedView>
+      <ChordProgression />
+    </View>
   );
 }
 

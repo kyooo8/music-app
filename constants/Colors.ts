@@ -9,6 +9,7 @@ const tintColorDark = "#5B9CC0";
 
 export const Colors = {
   light: {
+    tab: "#ffffff",
     text: "#11181C",
     background: "#f2f2f2",
     tint: tintColorLight,
@@ -20,6 +21,7 @@ export const Colors = {
     ChordProgression: "#ffffff",
   },
   dark: {
+    tab: "#202020",
     text: "#ECEDEE",
     background: "#000000",
     tint: tintColorDark,

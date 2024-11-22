@@ -1,22 +1,28 @@
 import { Tabs } from "expo-router";
-import React, { useState } from "react";
+import { Text } from "react-native";
 import { ChordProvider, ChordContext } from "@/ChordContext";
 import { Colors } from "@/constants/Colors";
-import { useColorScheme } from "@/hooks/useColorScheme";
 import Icon from "@/components/Icon";
-import { ThemedText } from "@/components/ThemedText";
 
 export default function TabLayout() {
-  const colorScheme = useColorScheme();
-
+  const tint = Colors.dark.tint;
+  const tab = Colors.dark.tab;
+  const text = Colors.dark.text;
   return (
     <ChordProvider>
       <Tabs
         screenOptions={{
-          tabBarActiveTintColor: Colors[colorScheme ?? "light"].tint,
+          tabBarActiveTintColor: tint,
           headerShown: true,
           tabBarStyle: {
             height: 90,
+            backgroundColor: tab,
+          },
+          headerStyle: {
+            backgroundColor: tab,
+          },
+          headerTitleStyle: {
+            color: text,
           },
         }}
       >
@@ -27,11 +33,18 @@ export default function TabLayout() {
             tabBarIcon: ({ color, focused }) => (
               <ChordContext.Consumer>
                 {(context) => {
-                  if (context === null) {
-                    return null;
-                  }
                   const { root } = context;
-                  return <ThemedText>{root}</ThemedText>;
+                  return (
+                    <Text
+                      style={{
+                        fontWeight: "bold",
+                        color: focused ? tint : color,
+                        fontSize: 20,
+                      }}
+                    >
+                      {root ? root : "C"}
+                    </Text>
+                  );
                 }}
               </ChordContext.Consumer>
             ),
@@ -42,7 +55,7 @@ export default function TabLayout() {
           options={{
             title: "メロディー",
             tabBarIcon: ({ color, focused }) => (
-              <Icon name={"melody"} size={48} color={color} />
+              <Icon name={"melody"} size={28} color={focused ? tint : color} />
             ),
           }}
         />
@@ -51,7 +64,7 @@ export default function TabLayout() {
           options={{
             title: "ベース",
             tabBarIcon: ({ color, focused }) => (
-              <Icon name={"bass"} size={48} color={color} />
+              <Icon name={"bass"} size={28} color={focused ? tint : color} />
             ),
           }}
         />
@@ -60,7 +73,7 @@ export default function TabLayout() {
           options={{
             title: "ドラム",
             tabBarIcon: ({ color, focused }) => (
-              <Icon name={"dram"} size={48} color={color} />
+              <Icon name={"dram"} size={28} color={focused ? tint : color} />
             ),
           }}
         />
