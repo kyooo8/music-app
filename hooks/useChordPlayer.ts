@@ -1,12 +1,12 @@
 // hooks/useChordPlayer.ts
-import { useRef, useContext, useCallback } from "react";
+import { useState, useRef, useContext, useCallback } from "react";
 import { Alert } from "react-native";
 import { Audio, AVPlaybackStatus } from "expo-av";
 import { ChordContext } from "@/ChordContext";
 
 export const useChordPlayer = () => {
-  const { scaleNotes, chordProgression, bpm, playing, setPlaying } =
-    useContext(ChordContext);
+  const { scaleNotes, chordProgression, bpm } = useContext(ChordContext);
+  const [playing, setPlaying] = useState(false);
 
   // ループ再生を停止するためのフラグ
   const isCancelled = useRef(false);

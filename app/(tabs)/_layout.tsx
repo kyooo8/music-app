@@ -17,6 +17,8 @@ export default function TabLayout() {
           tabBarStyle: {
             height: 90,
             backgroundColor: tab,
+            borderTopWidth: 0,
+            borderTopColor: "transparent",
           },
           headerStyle: {
             backgroundColor: tab,
