@@ -1,4 +1,4 @@
-import React, { createContext, useState } from "react";
+import React, { createContext, useState, useEffect } from "react";
 
 export type ScaleType = "メジャー" | "マイナー";
 
@@ -14,6 +14,11 @@ interface ChordContextType {
   setScaleNotes: React.Dispatch<React.SetStateAction<string[] | null>>;
   chordProgression: number[];
   setChordProgression: React.Dispatch<React.SetStateAction<number[]>>;
+  melody: number[][];
+  setMelody: React.Dispatch<React.SetStateAction<number[][]>>;
+  sortedMelodyNotes: { name: string; index: number }[];
+  playing: boolean;
+  setPlaying: React.Dispatch<React.SetStateAction<boolean>>;
 }
 
 const defaultChordContext: ChordContextType = {
@@ -28,6 +33,11 @@ const defaultChordContext: ChordContextType = {
   setScaleNotes: () => {},
   chordProgression: [],
   setChordProgression: () => {},
+  melody: [[]],
+  setMelody: () => {},
+  sortedMelodyNotes: [],
+  playing: false,
+  setPlaying: () => {},
 };
 
 export const ChordContext =
@@ -53,6 +63,36 @@ export const ChordProvider = ({ children }: { children: React.ReactNode }) => {
   const [scaleType, setScaleType] = useState<ScaleType>("メジャー");
   const [scaleNotes, setScaleNotes] = useState<string[] | null>(null);
   const [chordProgression, setChordProgression] = useState<number[]>([]);
+  const [melody, setMelody] = useState<number[][]>([[]]);
+  const [sortedMelodyNotes, setSortedMelodyNotes] = useState<
+    { name: string; index: number }[]
+  >([]);
+  const [playing, setPlaying] = useState(false);
+  useEffect(() => {
+    if (!root || notes.length === 0) {
+      setSortedMelodyNotes([]);
+      return;
+    }
+
+    const rootIndex = notes.indexOf(root);
+    const sortNotes = [...notes.slice(rootIndex), ...notes.slice(0, rootIndex)];
+    const calculatedNotes = [
+      ...sortNotes.slice(8, 11),
+      ...sortNotes,
+      ...sortNotes.slice(0, 3),
+    ].map((note, index) => ({ name: note, index }));
+
+    // 状態が変更された場合にのみ更新
+    setSortedMelodyNotes((prev) => {
+      const isSame =
+        prev.length === calculatedNotes.length &&
+        prev.every((note, i) => note.name === calculatedNotes[i].name);
+      if (isSame) return prev; // 同じ状態なら更新しない
+
+      return calculatedNotes;
+    });
+  }, [root, notes]);
+
   return (
     <ChordContext.Provider
       value={{
@@ -67,6 +107,11 @@ export const ChordProvider = ({ children }: { children: React.ReactNode }) => {
         setScaleNotes,
         chordProgression,
         setChordProgression,
+        melody,
+        setMelody,
+        sortedMelodyNotes,
+        playing,
+        setPlaying,
       }}
     >
       {children}
