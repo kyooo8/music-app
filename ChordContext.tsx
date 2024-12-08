@@ -16,6 +16,8 @@ interface ChordContextType {
   setChordProgression: React.Dispatch<React.SetStateAction<number[]>>;
   melody: number[][];
   setMelody: React.Dispatch<React.SetStateAction<number[][]>>;
+  bass: number[][];
+  setBass: React.Dispatch<React.SetStateAction<number[][]>>;
   sortedMelodyNotes: { name: string; index: number }[];
   dram: boolean[][][];
   setDram: React.Dispatch<React.SetStateAction<boolean[][][]>>;
@@ -35,6 +37,8 @@ const defaultChordContext: ChordContextType = {
   setChordProgression: () => {},
   melody: [[]],
   setMelody: () => {},
+  bass: [[]],
+  setBass: () => {},
   sortedMelodyNotes: [],
   dram: [[[false]]],
   setDram: () => {},
@@ -64,10 +68,12 @@ export const ChordProvider = ({ children }: { children: React.ReactNode }) => {
   const [scaleNotes, setScaleNotes] = useState<string[] | null>(null);
   const [chordProgression, setChordProgression] = useState<number[]>([]);
   const [melody, setMelody] = useState<number[][]>([[]]);
+  const [bass, setBass] = useState<number[][]>([[]]);
   const [sortedMelodyNotes, setSortedMelodyNotes] = useState<
     { name: string; index: number }[]
   >([]);
   const [dram, setDram] = useState<boolean[][][]>([[[]]]);
+
   useEffect(() => {
     if (!root) return;
     if (notes.length === 0) {
@@ -110,6 +116,8 @@ export const ChordProvider = ({ children }: { children: React.ReactNode }) => {
         setChordProgression,
         melody,
         setMelody,
+        bass,
+        setBass,
         sortedMelodyNotes,
         dram,
         setDram,
