@@ -16,27 +16,27 @@ interface Props {
   thisChordIndex: number;
 }
 
-export const MelodyParts = ({ note, chordIndex, thisChordIndex }: Props) => {
+export const BassParts = ({ note, chordIndex, thisChordIndex }: Props) => {
   const tab = Colors.dark.tab;
   const tint = Colors.dark.tint;
-  const { melody, setMelody, scaleNotes } = useContext(ChordContext);
+  const { bass, setBass, scaleNotes } = useContext(ChordContext);
 
   const chordRoot = scaleNotes && scaleNotes[thisChordIndex];
 
   // 音符セルをタップしたときの処理
   const handleNoteInput = (chordIndex: number, noteIndex: number) => {
-    setMelody((prevMelody) => {
-      const updatedMelody = prevMelody.map((row) => [...row]); // 深いコピー
-      const currentNoteIndex = updatedMelody[chordIndex][noteIndex];
+    setBass((prevBass) => {
+      const updatedBass = prevBass.map((row) => [...row]); // 深いコピー
+      const currentNoteIndex = updatedBass[chordIndex][noteIndex];
 
       if (currentNoteIndex === note.index) {
         // 同じセルを再度選択した場合、削除
-        updatedMelody[chordIndex][noteIndex] = -1;
+        updatedBass[chordIndex][noteIndex] = -1;
       } else {
         // 新しい音のインデックスを設定
-        updatedMelody[chordIndex][noteIndex] = note.index;
+        updatedBass[chordIndex][noteIndex] = note.index;
       }
-      return updatedMelody;
+      return updatedBass;
     });
   };
 
@@ -56,15 +56,13 @@ export const MelodyParts = ({ note, chordIndex, thisChordIndex }: Props) => {
         .fill(null)
         .map((_, smallNoteIndex) => {
           const cellKey = `${note.name}-${chordIndex}-${smallNoteIndex}`;
-          const isSelected =
-            melody[chordIndex]?.[smallNoteIndex] === note.index;
+          const isSelected = bass[chordIndex]?.[smallNoteIndex] === note.index;
           return (
             <TouchableOpacity
               key={cellKey}
               style={[
                 { backgroundColor: isSelected ? tint : tab },
                 styles.gridCell,
-                // isSelected && styles.selectedCell, // 選択されたセルの色変更
               ]}
               onPress={() => handleNoteInput(chordIndex, smallNoteIndex)}
             >
