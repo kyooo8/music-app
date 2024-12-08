@@ -46,8 +46,6 @@ export const DramParts = ({
     });
   };
 
-  const notePosition = dramNotes.indexOf(note);
-
   return (
     <View style={styles.chordColumn}>
       {Array(4)

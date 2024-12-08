@@ -117,7 +117,7 @@ const MelodyInputScreen = () => {
           </View>
 
           {/* 現在のメロディー表示 */}
-          <View style={styles.melodyContainer}>
+          {/* <View style={styles.melodyContainer}>
             <ThemedText>現在のメロディー:</ThemedText>
             {melody.map((chordMelody, chordIndex) => {
               const chordNote =
@@ -140,7 +140,7 @@ const MelodyInputScreen = () => {
                 </ThemedText>
               );
             })}
-          </View>
+          </View> */}
         </>
       ) : (
         <View style={styles.emptyContainer}>
