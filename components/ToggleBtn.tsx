@@ -1,12 +1,6 @@
 import React, { useState, useContext } from "react";
 import { ChordContext } from "@/ChordContext";
-import {
-  View,
-  Text,
-  TouchableOpacity,
-  StyleSheet,
-  Animated,
-} from "react-native";
+import { Text, TouchableOpacity, StyleSheet, Animated } from "react-native";
 
 export const ToggleButton = () => {
   const { scaleType, setScaleType } = useContext(ChordContext);

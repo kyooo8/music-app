@@ -1,11 +1,8 @@
-import { Image, StyleSheet, Platform } from "react-native";
-
-import { HelloWave } from "@/components/HelloWave";
-import ParallaxScrollView from "@/components/ParallaxScrollView";
+import { StyleSheet } from "react-native";
 import { ThemedText } from "@/components/ThemedText";
-import { ThemedView } from "@/components/ThemedView";
-import { Link } from "expo-router";
 import { useRouter } from "expo-router";
+import ParallaxScrollView from "@/components/ParallaxScrollView";
+import { ExternalLink } from "@/components/ExternalLink";
 
 export default function HomeScreen() {
   const router = useRouter();
@@ -17,9 +14,12 @@ export default function HomeScreen() {
       <ThemedText type="subtitle">　テキストサンプルです</ThemedText>
       <ThemedText type="link">　テキストサンプルです</ThemedText>
 
-      <Link href="/(tabs)/chord" onPress={() => router.push("/(tabs)/chord")}>
+      <ExternalLink
+        href="/(tabs)/chord"
+        onPress={() => router.push("/(tabs)/chord")}
+      >
         code
-      </Link>
+      </ExternalLink>
     </ParallaxScrollView>
   );
 }
