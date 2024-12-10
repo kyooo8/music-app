@@ -1,44 +1,41 @@
 // ChordProgression.tsx
 import React, { useEffect, useState, useCallback, useContext } from "react";
 import { StyleSheet, View, TouchableOpacity, FlatList } from "react-native";
-import { ChordContext } from "@/ChordContext";
+import { ChordContext } from "@/MusicContext";
 import { ThemedText } from "@/components/ThemedText";
 import Icon from "./Icon";
-import { v4 as uuidv4 } from "uuid"; // UUIDのインポート
+import { v4 as uuidv4 } from "uuid";
 import { Colors } from "@/constants/Colors";
 
-interface ChordItem {
+interface ChordDisplayItem {
   id: string;
-  chordIndex: number;
+  index: number; // chordProgressionのキー
+  chordIndex: number; // chordItem.chord
 }
 
 export function ChordProgression() {
-  const { scaleNotes, chordProgression, setChordProgression } =
+  const { root, scaleNotes, chordProgression, setChordProgression } =
     useContext(ChordContext);
   const [showPlusIndices, setShowPlusIndices] = useState<number[]>([]);
-
   const bg = Colors.dark.tab;
 
-  // Initialize data with unique IDs using UUID
-  const [data, setData] = useState<ChordItem[]>(
-    chordProgression.map((chord) => ({
-      id: uuidv4(),
-      chordIndex: chord,
-    }))
-  );
+  const [data, setData] = useState<ChordDisplayItem[]>([]);
 
   useEffect(() => {
-    // Sync data with chordProgression changes
-    setData(
-      chordProgression.map((chord) => ({
-        id: uuidv4(),
-        chordIndex: chord,
-      }))
-    );
+    if (!chordProgression) {
+      setData([]);
+      setShowPlusIndices([]);
+      return;
+    }
+    const entries = Object.entries(chordProgression).map(([k, v]) => ({
+      id: uuidv4(),
+      index: Number(k),
+      chordIndex: v.chord,
+    }));
+    setData(entries);
     setShowPlusIndices([]);
   }, [chordProgression, scaleNotes]);
 
-  // Toggle visibility of plus buttons
   const handleLongPress = useCallback((index: number) => {
     setShowPlusIndices((prev) => {
       if (prev.includes(index)) {
@@ -49,62 +46,93 @@ export function ChordProgression() {
     });
   }, []);
 
-  // Add a chord after the specified index
   const handleAddChord = useCallback(
     (index: number) => {
       setChordProgression((prev) => {
-        const newChord = prev[index];
-        const newProgression = [
-          ...prev.slice(0, index + 1),
-          newChord,
-          ...prev.slice(index + 1),
-        ];
-        return newProgression;
+        if (!prev) return prev;
+        const entries = Object.entries(prev)
+          .map(
+            ([k, v]) =>
+              [Number(k), v] as [number, { chord: number; shape: string }]
+          )
+          .sort((a, b) => a[0] - b[0]);
+
+        if (entries.length >= 8) {
+          alert("最大8個まで");
+          return prev;
+        }
+
+        const pos = entries.findIndex(([i]) => i === index);
+        if (pos === -1) return prev;
+        const chordToInsert = entries[pos][1];
+        // 新しいコードを同じchordで挿入
+        // pos+1に挿入
+        entries.splice(pos + 1, 0, [0, chordToInsert]);
+        // キーを0から再割当
+        entries.forEach((e, i) => {
+          e[0] = i;
+        });
+        return Object.fromEntries(entries.map(([i, v]) => [i, v]));
       });
     },
     [setChordProgression]
   );
 
-  // Delete the chord at the specified index
   const deleteChord = useCallback(
     (index: number) => {
-      setChordProgression((prev) => prev.filter((_, i) => i !== index));
-      setData((prev) => prev.filter((_, i) => i !== index));
+      setChordProgression((prev) => {
+        if (!prev) return prev;
+        const entries = Object.entries(prev)
+          .map(
+            ([k, v]) =>
+              [Number(k), v] as [number, { chord: number; shape: string }]
+          )
+          .sort((a, b) => a[0] - b[0]);
+
+        const pos = entries.findIndex(([i]) => i === index);
+        if (pos === -1) return prev;
+        entries.splice(pos, 1);
+        // 再割当
+        entries.forEach((e, i) => {
+          e[0] = i;
+        });
+        return Object.fromEntries(entries.map(([i, v]) => [i, v]));
+      });
+      setData((prev) => prev.filter((item) => item.index !== index));
     },
     [setChordProgression]
   );
 
-  // Render item without drag functionality
   const renderItem = useCallback(
-    ({ item, index }: { item: ChordItem; index: number }) => {
-      const isShowPlus = showPlusIndices.includes(index);
+    ({ item }: { item: ChordDisplayItem }) => {
+      const isShowPlus = showPlusIndices.includes(item.index);
 
       return (
         <TouchableOpacity
           style={styles.chordCard}
-          onLongPress={() => handleLongPress(index)}
+          onLongPress={() => handleLongPress(item.index)}
           activeOpacity={0.8}
         >
           {isShowPlus && (
-            <>
-              <View style={styles.chordSetting}>
-                <TouchableOpacity
-                  onPress={() => deleteChord(index)}
-                  style={styles.settingButton}
-                >
-                  <Icon name="bin2" size={15} color="red" />
-                </TouchableOpacity>
-                <TouchableOpacity
-                  onPress={() => handleAddChord(index)}
-                  style={styles.settingButton}
-                >
-                  <Icon name="plus" size={25} color="green" />
-                </TouchableOpacity>
-              </View>
-            </>
+            <View style={styles.chordSetting}>
+              <TouchableOpacity
+                onPress={() => deleteChord(item.index)}
+                style={styles.settingButton}
+              >
+                <Icon name="bin2" size={15} color="red" />
+              </TouchableOpacity>
+              <TouchableOpacity
+                onPress={() => handleAddChord(item.index)}
+                style={styles.settingButton}
+              >
+                <Icon name="plus" size={25} color="green" />
+              </TouchableOpacity>
+            </View>
           )}
           <ThemedText type="title">
-            {scaleNotes ? scaleNotes[item.chordIndex] : ""}
+            {scaleNotes && scaleNotes[item.chordIndex]
+              ? scaleNotes[item.chordIndex]
+              : ""}
           </ThemedText>
         </TouchableOpacity>
       );
@@ -132,7 +160,7 @@ const styles = StyleSheet.create({
     width: "90%",
     marginVertical: 30,
     borderRadius: 16,
-    padding: 10, // パディングを追加
+    padding: 10,
   },
   chordProgression: {
     flexDirection: "row",

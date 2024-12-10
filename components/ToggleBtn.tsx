@@ -1,5 +1,5 @@
 import React, { useState, useContext } from "react";
-import { ChordContext } from "@/ChordContext";
+import { ChordContext } from "@/MusicContext";
 import { Text, TouchableOpacity, StyleSheet, Animated } from "react-native";
 
 export const ToggleButton = () => {

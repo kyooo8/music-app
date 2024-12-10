@@ -1,6 +1,27 @@
+// MusicContext.tsx
 import React, { createContext, useState, useEffect } from "react";
 
 export type ScaleType = "メジャー" | "マイナー";
+
+export type NoteData = { relativePos: number; duration: string } | null;
+export type MelobassData = {
+  [measure: number]: {
+    [beat: number]: NoteData;
+  };
+} | null;
+
+type DramData = {
+  [measure: number]: {
+    [instrument: number]: {
+      [step: number]: boolean;
+    };
+  };
+} | null;
+
+export type ChordItem = { chord: number; shape: string };
+type ChordProgressionData = {
+  [index: number]: ChordItem;
+} | null;
 
 interface ChordContextType {
   notes: string[];
@@ -10,17 +31,19 @@ interface ChordContextType {
   setBpm: React.Dispatch<React.SetStateAction<number>>;
   scaleType: ScaleType;
   setScaleType: React.Dispatch<React.SetStateAction<ScaleType>>;
-  scaleNotes: string[] | null;
-  setScaleNotes: React.Dispatch<React.SetStateAction<string[] | null>>;
-  chordProgression: number[];
-  setChordProgression: React.Dispatch<React.SetStateAction<number[]>>;
-  melody: number[][];
-  setMelody: React.Dispatch<React.SetStateAction<number[][]>>;
-  bass: number[][];
-  setBass: React.Dispatch<React.SetStateAction<number[][]>>;
+  scaleNotes: string[];
+  setScaleNotes: React.Dispatch<React.SetStateAction<string[]>>;
+  chordProgression: ChordProgressionData;
+  setChordProgression: React.Dispatch<
+    React.SetStateAction<ChordProgressionData>
+  >;
+  melody: MelobassData;
+  setMelody: React.Dispatch<React.SetStateAction<MelobassData>>;
+  bass: MelobassData;
+  setBass: React.Dispatch<React.SetStateAction<MelobassData>>;
   sortedMelodyNotes: { name: string; index: number }[];
-  dram: boolean[][][];
-  setDram: React.Dispatch<React.SetStateAction<boolean[][][]>>;
+  dram: DramData;
+  setDram: React.Dispatch<React.SetStateAction<DramData>>;
 }
 
 const defaultChordContext: ChordContextType = {
@@ -31,16 +54,16 @@ const defaultChordContext: ChordContextType = {
   setBpm: () => {},
   scaleType: "メジャー",
   setScaleType: () => {},
-  scaleNotes: null,
+  scaleNotes: [],
   setScaleNotes: () => {},
-  chordProgression: [],
+  chordProgression: null,
   setChordProgression: () => {},
-  melody: [[]],
+  melody: null,
   setMelody: () => {},
-  bass: [[]],
+  bass: null,
   setBass: () => {},
   sortedMelodyNotes: [],
-  dram: [[[false]]],
+  dram: null,
   setDram: () => {},
 };
 
@@ -65,14 +88,15 @@ export const ChordProvider = ({ children }: { children: React.ReactNode }) => {
   const [root, setRoot] = useState<string | null>(null);
   const [bpm, setBpm] = useState(100);
   const [scaleType, setScaleType] = useState<ScaleType>("メジャー");
-  const [scaleNotes, setScaleNotes] = useState<string[] | null>(null);
-  const [chordProgression, setChordProgression] = useState<number[]>([]);
-  const [melody, setMelody] = useState<number[][]>([[]]);
-  const [bass, setBass] = useState<number[][]>([[]]);
+  const [scaleNotes, setScaleNotes] = useState<string[]>([]);
+  const [chordProgression, setChordProgression] =
+    useState<ChordProgressionData>(null);
+  const [melody, setMelody] = useState<MelobassData>(null);
+  const [bass, setBass] = useState<MelobassData>(null);
   const [sortedMelodyNotes, setSortedMelodyNotes] = useState<
     { name: string; index: number }[]
   >([]);
-  const [dram, setDram] = useState<boolean[][][]>([[[]]]);
+  const [dram, setDram] = useState<DramData>(null);
 
   useEffect(() => {
     if (!root) return;
@@ -89,12 +113,11 @@ export const ChordProvider = ({ children }: { children: React.ReactNode }) => {
       ...sortNotes.slice(0, 3),
     ].map((note, index) => ({ name: note, index }));
 
-    // 状態が変更された場合にのみ更新
     setSortedMelodyNotes((prev) => {
       const isSame =
         prev.length === calculatedNotes.length &&
         prev.every((note, i) => note.name === calculatedNotes[i].name);
-      if (isSame) return prev; // 同じ状態なら更新しない
+      if (isSame) return prev;
 
       return calculatedNotes;
     });

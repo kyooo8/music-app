@@ -1,9 +1,10 @@
-import React, { useState, useContext, useEffect, useRef } from "react";
-import { ScrollView, View, StyleSheet, Text } from "react-native";
-import { ChordContext } from "../../ChordContext";
+// DramPage.tsx
+import React, { useEffect, useRef, useContext } from "react";
+import { ScrollView, View, StyleSheet } from "react-native";
+import { ChordContext } from "../../MusicContext";
 import { ThemedText } from "@/components/ThemedText";
 import { Colors } from "@/constants/Colors";
-import { MelodyParts } from "@/components/MelodyParts";
+import { DramParts } from "@/components/DramParts";
 import { PlayBtn } from "@/components/PlayBtn";
 import { Bpm } from "@/components/Bpm";
 import { ToggleButton } from "@/components/ToggleBtn";
@@ -13,7 +14,6 @@ import {
   cellWidth,
   lastItemMargin,
 } from "@/constants/Style";
-import { DramParts } from "@/components/DramParts";
 
 export default function DramPage() {
   const { chordProgression, scaleNotes, dram, setDram } =
@@ -31,21 +31,58 @@ export default function DramPage() {
     "Cハイハット",
     "スネア",
     "バス",
+    "ハンドクラップ",
   ];
 
   const verticalScrollRef = useRef<ScrollView>(null);
   const horizontalScrllRef = useRef<ScrollView>(null);
 
   useEffect(() => {
-    if (dram.length !== chordProgression.length) {
-      // chordProgression の長さ分だけ繰り返し、各要素は9x4の配列
-      setDram(
-        chordProgression.map(() =>
-          Array.from({ length: 9 }, () => Array(4).fill(false))
-        )
-      );
+    if (!chordProgression) return;
+    const measureCount = Object.keys(chordProgression).length;
+    const currentDramCount = dram ? Object.keys(dram).length : 0;
+
+    if (currentDramCount !== measureCount) {
+      // dram初期化: measureCount×10楽器×16ステップすべてfalse
+      const newDram: {
+        [measure: number]: {
+          [instrument: number]: {
+            [step: number]: boolean;
+          };
+        };
+      } = {};
+
+      for (let m = 0; m < measureCount; m++) {
+        const measureObj: {
+          [instrument: number]: { [step: number]: boolean };
+        } = {};
+        for (let i = 0; i < 10; i++) {
+          const instrumentObj: { [step: number]: boolean } = {};
+          for (let s = 0; s < 16; s++) {
+            instrumentObj[s] = false;
+          }
+          measureObj[i] = instrumentObj;
+        }
+        newDram[m] = measureObj;
+      }
+
+      setDram(newDram);
     }
-  }, [chordProgression, dram.length, setDram]);
+  }, [chordProgression, dram, setDram]);
+
+  const chordEntries = chordProgression
+    ? (
+        Object.entries(chordProgression) as [
+          string,
+          { chord: number; shape: string }
+        ][]
+      )
+        .map(
+          ([k, v]) =>
+            [Number(k), v] as [number, { chord: number; shape: string }]
+        )
+        .sort((a, b) => a[0] - b[0])
+    : [];
 
   return (
     <View style={[styles.container, { backgroundColor: bg }]}>
@@ -56,11 +93,10 @@ export default function DramPage() {
           <ToggleButton />
         </View>
       </View>
-      {chordProgression && chordProgression.length > 0 ? (
+      {chordProgression && chordEntries.length > 0 ? (
         <>
           {/* コード進行の表示 */}
           <View style={styles.chordRow}>
-            {/* 音階ラベル部分と位置合わせするため、noteLabelContainerを外側に配置 */}
             <View style={{ width: 44.3 }}></View>
             <ScrollView
               horizontal
@@ -68,21 +104,18 @@ export default function DramPage() {
               ref={horizontalScrllRef}
               scrollEventThrottle={16}
             >
-              {chordProgression.map((chordIndex, index) => (
+              {chordEntries.map(([index, chordItem]) => (
                 <View
                   key={index}
                   style={[styles.chordCell, { backgroundColor: tab }]}
                 >
-                  <ThemedText>
-                    {scaleNotes ? scaleNotes[chordIndex] : ""}
-                  </ThemedText>
+                  <ThemedText>{scaleNotes[chordItem.chord] || ""}</ThemedText>
                 </View>
               ))}
             </ScrollView>
           </View>
 
           <View style={styles.gridContainer}>
-            {/* ラベル */}
             <ScrollView
               ref={verticalScrollRef}
               showsVerticalScrollIndicator={false}
@@ -99,7 +132,6 @@ export default function DramPage() {
               ))}
             </ScrollView>
 
-            {/* グリッド (横スクロール時にコード進行も同期) */}
             <ScrollView
               horizontal
               showsHorizontalScrollIndicator={false}
@@ -125,13 +157,13 @@ export default function DramPage() {
               >
                 {dramNotes.map((note, noteIndex) => (
                   <View key={noteIndex} style={styles.noteRow}>
-                    {chordProgression.map((_, chordIndex) => (
+                    {chordEntries.map(([thisChordIndex, chordItem]) => (
                       <DramParts
-                        key={`${chordIndex}-${noteIndex}`}
+                        key={`${thisChordIndex}-${noteIndex}`}
                         note={note}
-                        chordIndex={chordIndex}
-                        dramNotes={dramNotes}
+                        chordIndex={thisChordIndex}
                         noteIndex={noteIndex}
+                        dramNotes={dramNotes}
                       />
                     ))}
                   </View>
@@ -139,19 +171,6 @@ export default function DramPage() {
               </ScrollView>
             </ScrollView>
           </View>
-
-          {/* 現在のドラム表示 */}
-          {/* <ScrollView style={styles.melodyContainer}>
-            <ThemedText>ドラム</ThemedText>
-            {dram.map((d, chordIndex) => (
-              <View key={chordIndex}>
-                <ThemedText>Chord {chordIndex}:</ThemedText>
-                {d.map((row, rowIndex) => (
-                  <ThemedText key={rowIndex}>{row.join(", ")}</ThemedText>
-                ))}
-              </View>
-            ))}
-          </ScrollView> */}
         </>
       ) : (
         <View style={styles.emptyContainer}>
@@ -196,10 +215,6 @@ const styles = StyleSheet.create({
   noteRow: {
     flexDirection: "row",
     alignItems: "center",
-  },
-  melodyContainer: {
-    height: "20%",
-    padding: 10,
   },
   emptyContainer: {
     flex: 1,

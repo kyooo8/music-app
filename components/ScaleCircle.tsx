@@ -1,6 +1,6 @@
 import React, { useContext, useEffect, useRef } from "react";
 import { Animated, StyleSheet } from "react-native";
-import { ChordContext } from "@/ChordContext";
+import { ChordContext } from "@/MusicContext";
 
 export function ScaleCircle() {
   const { scaleType, root } = useContext(ChordContext);

@@ -1,3 +1,4 @@
+// OctaveCircle.tsx
 import {
   StyleSheet,
   Text,
@@ -6,13 +7,15 @@ import {
   TouchableOpacity,
 } from "react-native";
 import { useRef, useEffect, useContext } from "react";
-import { ChordContext } from "@/ChordContext";
+import { ChordContext } from "@/MusicContext";
 import { Colors } from "@/constants/Colors";
+import { ChordItem } from "@/MusicContext";
 
 export function OctaveCircle() {
   const {
     notes,
     scaleNotes,
+    scaleType,
     setRoot,
     root,
     chordProgression,
@@ -20,16 +23,9 @@ export function OctaveCircle() {
   } = useContext(ChordContext);
   const circleTextColor = Colors.dark.circleText;
 
-  // ダブルタップの検出に使用
   const lastTap = useRef<number | null>(null);
-
-  // rotationのアニメーション値
   const rotation = useRef(new Animated.Value(0)).current;
-
-  // 前回のルート音のインデックスを保持
   const previousIndex = useRef<number>(notes.indexOf(root ? root : "C"));
-
-  // 累積の回転角度を保持
   const accumulatedRotation = useRef(0);
 
   useEffect(() => {
@@ -39,21 +35,17 @@ export function OctaveCircle() {
       ((currentIndex - previousIndex.current + notes.length) % notes.length) *
       anglePerNote;
 
-    // 最短距離で回転するように調整
     let shortestAngle =
       angleDifference > 180 ? angleDifference - 360 : angleDifference;
 
-    // 累積回転角度を更新
     accumulatedRotation.current -= shortestAngle;
 
-    // 回転角度を更新
     Animated.timing(rotation, {
       toValue: accumulatedRotation.current,
       duration: 500,
       useNativeDriver: true,
     }).start();
 
-    // 前回のインデックスを更新
     previousIndex.current = currentIndex;
   }, [root]);
 
@@ -73,48 +65,67 @@ export function OctaveCircle() {
     outputRange: ["360deg", "0deg", "-360deg"],
   });
 
-  // ダブルタップの処理
   const handleDoubleTap = (note: string) => {
     const now = Date.now();
     if (lastTap.current && now - lastTap.current < 300) {
-      // ダブルタップとみなす
+      // ダブルタップ: root設定
       setRoot(note);
     }
     lastTap.current = now;
+  };
+
+  const handleLongPress = (note: string) => {
+    if (scaleNotes?.includes(note)) {
+      const chordIndex = scaleNotes.indexOf(note);
+      setChordProgression((prev) => {
+        if (!prev) {
+          // prevがnullなら新たにオブジェクトを作成
+          return { 0: { chord: chordIndex, shape: "maj7" } };
+        }
+
+        // Object.entriesでエントリを取得し、numberキーとChordItemであることを明示
+        const entries = Object.entries(prev)
+          .map(
+            ([k, v]) =>
+              [Number(k), v] as [number, { chord: number; shape: string }]
+          )
+          .sort((a, b) => a[0] - b[0]);
+
+        if (entries.length >= 8) {
+          alert("最大8個まで");
+          return prev;
+        }
+
+        const nextIndex =
+          entries.length > 0 ? entries[entries.length - 1][0] + 1 : 0;
+        const newItem = { chord: chordIndex, shape: "major" };
+        entries.push([nextIndex, newItem]);
+
+        // entriesをオブジェクトに戻す
+        const newObj = Object.fromEntries(entries.map(([i, v]) => [i, v]));
+        return newObj;
+      });
+    } else if (!root) {
+      alert("ルートを選んで");
+    } else {
+      alert("スケール外です");
+    }
   };
 
   return (
     <View style={styles.container}>
       <Animated.View style={[styles.circle, animatedStyle]}>
         {notes.map((note, index) => {
-          // 各音符の角度を計算
           const angle = (360 / notes.length) * index - 90;
           const rad = (angle * Math.PI) / 180;
-
-          // xとyの位置を計算
           const x = 125 * Math.cos(rad);
           const y = 125 * Math.sin(rad);
 
           return (
             <TouchableOpacity
               key={note}
-              onLongPress={() => {
-                if (scaleNotes?.includes(note)) {
-                  const newChordProgression = chordProgression.concat(
-                    scaleNotes.indexOf(note)
-                  );
-                  if (newChordProgression.length <= 8) {
-                    setChordProgression(newChordProgression);
-                  } else {
-                    alert("最大8個まで");
-                  }
-                } else if (!root) {
-                  alert("ルートを選んで");
-                } else {
-                  alert("スケール外です");
-                }
-              }}
               onPress={() => handleDoubleTap(note)}
+              onLongPress={() => handleLongPress(note)}
               activeOpacity={0.7}
               style={[
                 styles.noteContainer,
@@ -133,13 +144,13 @@ export function OctaveCircle() {
                     styles.text,
                     {
                       color:
-                        scaleNotes === null
+                        scaleNotes.length === 0
                           ? circleTextColor
                           : note === root
-                          ? "#5B9CC0" // ルート音の色
+                          ? "#5B9CC0"
                           : scaleNotes.includes(note)
-                          ? circleTextColor // 薄く表示する音の色
-                          : "#A0A0A0", // デフォルトの色
+                          ? circleTextColor
+                          : "#A0A0A0",
                     },
                   ]}
                 >
@@ -169,10 +180,6 @@ const styles = StyleSheet.create({
     borderRadius: 160,
     alignItems: "center",
     justifyContent: "center",
-    // paddingTop: 10,
-    // paddingBottom: 10,
-    // paddingLeft: 10,
-    // paddingRight: 10,
     position: "relative",
   },
   text: {

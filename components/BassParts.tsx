@@ -1,7 +1,8 @@
+// BassParts.tsx
 import React, { useContext } from "react";
 import { View, StyleSheet, TouchableOpacity } from "react-native";
 import { Colors } from "@/constants/Colors";
-import { ChordContext } from "@/ChordContext";
+import { ChordContext } from "@/MusicContext";
 import {
   cellheight,
   cellmargin,
@@ -11,52 +12,41 @@ import {
 import { ThemedText } from "./ThemedText";
 
 interface Props {
-  note: { name: string; index: number }; // 音符は名前とインデックスを持つオブジェクト
-  chordIndex: number;
-  thisChordIndex: number;
+  note: { name: string; index: number };
+  chordIndex: number; // measure
+  chordItem: { chord: number; shape: string };
 }
 
-export const BassParts = ({ note, chordIndex, thisChordIndex }: Props) => {
+export const BassParts = ({ note, chordIndex, chordItem }: Props) => {
   const tab = Colors.dark.tab;
   const tint = Colors.dark.tint;
-  const { bass, setBass, scaleNotes } = useContext(ChordContext);
+  const { bass, setBass } = useContext(ChordContext);
 
-  const chordRoot = scaleNotes && scaleNotes[thisChordIndex];
+  const handleNoteInput = (measure: number, beat: number) => {
+    setBass((prev) => {
+      const oldBass = prev || {};
+      const measureObj = oldBass[measure] || {};
+      const currentNote = measureObj[beat];
+      const isSelected = currentNote && currentNote.relativePos === note.index;
 
-  // 音符セルをタップしたときの処理
-  const handleNoteInput = (chordIndex: number, noteIndex: number) => {
-    setBass((prevBass) => {
-      const updatedBass = prevBass.map((row) => [...row]); // 深いコピー
-      const currentNoteIndex = updatedBass[chordIndex][noteIndex];
+      const newNote = isSelected
+        ? null
+        : { relativePos: note.index, duration: "quarter" };
 
-      if (currentNoteIndex === note.index) {
-        // 同じセルを再度選択した場合、削除
-        updatedBass[chordIndex][noteIndex] = -1;
-      } else {
-        // 新しい音のインデックスを設定
-        updatedBass[chordIndex][noteIndex] = note.index;
-      }
-      return updatedBass;
+      const updatedMeasure = { ...measureObj, [beat]: newNote };
+      return { ...oldBass, [measure]: updatedMeasure };
     });
-  };
-
-  // 音程ラベルを計算
-  const getNoteLabel = () => {
-    const postion = scaleNotes?.indexOf(note.name);
-
-    if (note.name === chordRoot) return "ルート";
-    if (postion === 2) return "3rd";
-    if (postion === 4) return "5th";
-    if (postion === 6) return "7th";
   };
 
   return (
     <View style={styles.chordColumn}>
       {Array(4)
         .fill(null)
-        .map((_, smallNoteIndex) => {
-          const cellKey = `${note.name}-${chordIndex}-${smallNoteIndex}`;
-          const isSelected = bass[chordIndex]?.[smallNoteIndex] === note.index;
+        .map((_, beat) => {
+          const cellKey = `${note.name}-${chordIndex}-${beat}`;
+          const currentNote = bass?.[chordIndex]?.[beat];
+          const isSelected =
+            currentNote && currentNote.relativePos === note.index;
           return (
             <TouchableOpacity
               key={cellKey}
@@ -64,9 +54,9 @@ export const BassParts = ({ note, chordIndex, thisChordIndex }: Props) => {
                 { backgroundColor: isSelected ? tint : tab },
                 styles.gridCell,
               ]}
-              onPress={() => handleNoteInput(chordIndex, smallNoteIndex)}
+              onPress={() => handleNoteInput(chordIndex, beat)}
             >
-              <ThemedText>{getNoteLabel()}</ThemedText>
+              <ThemedText>{note.name}</ThemedText>
             </TouchableOpacity>
           );
         })}
@@ -78,14 +68,14 @@ const styles = StyleSheet.create({
   chordColumn: {
     flexDirection: "row",
     alignItems: "center",
-    marginRight: lastItemMargin, // グリッド間の余白を統一
+    marginRight: lastItemMargin,
   },
   gridCell: {
-    width: cellWidth, // グリッドセルの幅
-    height: cellheight, // グリッドセルの高さ
+    width: cellWidth,
+    height: cellheight,
     alignItems: "center",
     justifyContent: "center",
-    margin: cellmargin, // セル間の余白
-    borderRadius: 4, // セルに少し角をつける
+    margin: cellmargin,
+    borderRadius: 4,
   },
 });
