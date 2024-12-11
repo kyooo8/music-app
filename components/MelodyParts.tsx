@@ -1,7 +1,8 @@
-import React, { useContext } from "react";
+// MelodyParts.tsx
+import { useContext } from "react";
 import { View, StyleSheet, TouchableOpacity } from "react-native";
 import { Colors } from "@/constants/Colors";
-import { ChordContext } from "@/ChordContext";
+import { ChordContext } from "@/MusicContext";
 import {
   cellheight,
   cellmargin,
@@ -11,64 +12,57 @@ import {
 import { ThemedText } from "./ThemedText";
 
 interface Props {
-  note: { name: string; index: number }; // 音符は名前とインデックスを持つオブジェクト
+  note: { name: string; index: number };
   chordIndex: number;
-  thisChordIndex: number;
+  chordItem: { chord: number; shape: string };
 }
 
-export const MelodyParts = ({ note, chordIndex, thisChordIndex }: Props) => {
+export const MelodyParts = ({ note, chordIndex, chordItem }: Props) => {
   const tab = Colors.dark.tab;
   const tint = Colors.dark.tint;
-  const { melody, setMelody, scaleNotes } = useContext(ChordContext);
+  const { melody, setMelody } = useContext(ChordContext);
 
-  const chordRoot = scaleNotes && scaleNotes[thisChordIndex];
+  // 音符セルをタップした時の処理
+  const handleNoteInput = (measure: number, beat: number) => {
+    setMelody((prev) => {
+      const oldMelody = prev || {};
+      // measureが存在しなければ初期化
+      const measureObj = oldMelody[measure] || {};
 
-  // 音符セルをタップしたときの処理
-  const handleNoteInput = (chordIndex: number, noteIndex: number) => {
-    setMelody((prevMelody) => {
-      const updatedMelody = prevMelody.map((row) => [...row]); // 深いコピー
-      const currentNoteIndex = updatedMelody[chordIndex][noteIndex];
+      const currentNote = measureObj[beat];
+      const isSelected = currentNote && currentNote.relativePos === note.index;
 
-      if (currentNoteIndex === note.index) {
-        // 同じセルを再度選択した場合、削除
-        updatedMelody[chordIndex][noteIndex] = -1;
-      } else {
-        // 新しい音のインデックスを設定
-        updatedMelody[chordIndex][noteIndex] = note.index;
-      }
-      return updatedMelody;
+      const newNote = isSelected
+        ? null
+        : { relativePos: note.index, duration: "quarter" };
+
+      const updatedMeasure = { ...measureObj, [beat]: newNote };
+      return { ...oldMelody, [measure]: updatedMeasure };
     });
   };
 
-  // 音程ラベルを計算
-  const getNoteLabel = () => {
-    const postion = scaleNotes?.indexOf(note.name);
-
-    if (note.name === chordRoot) return "ルート";
-    if (postion === 2) return "3rd";
-    if (postion === 4) return "5th";
-    if (postion === 6) return "7th";
-  };
-
+  // メロディは1小節4ビート
+  // chordIndexが小節番号にあたる
+  // beatは0~3
   return (
     <View style={styles.chordColumn}>
       {Array(4)
         .fill(null)
-        .map((_, smallNoteIndex) => {
-          const cellKey = `${note.name}-${chordIndex}-${smallNoteIndex}`;
+        .map((_, beat) => {
+          const cellKey = `${note.name}-${chordIndex}-${beat}`;
+          const currentNote = melody?.[chordIndex]?.[beat];
           const isSelected =
-            melody[chordIndex]?.[smallNoteIndex] === note.index;
+            currentNote && currentNote.relativePos === note.index;
           return (
             <TouchableOpacity
               key={cellKey}
               style={[
                 { backgroundColor: isSelected ? tint : tab },
                 styles.gridCell,
-                // isSelected && styles.selectedCell, // 選択されたセルの色変更
               ]}
-              onPress={() => handleNoteInput(chordIndex, smallNoteIndex)}
+              onPress={() => handleNoteInput(chordIndex, beat)}
             >
-              <ThemedText>{getNoteLabel()}</ThemedText>
+              <ThemedText>{note.name}</ThemedText>
             </TouchableOpacity>
           );
         })}
@@ -80,14 +74,14 @@ const styles = StyleSheet.create({
   chordColumn: {
     flexDirection: "row",
     alignItems: "center",
-    marginRight: lastItemMargin, // グリッド間の余白を統一
+    marginRight: lastItemMargin,
   },
   gridCell: {
-    width: cellWidth, // グリッドセルの幅
-    height: cellheight, // グリッドセルの高さ
+    width: cellWidth,
+    height: cellheight,
     alignItems: "center",
     justifyContent: "center",
-    margin: cellmargin, // セル間の余白
-    borderRadius: 4, // セルに少し角をつける
+    margin: cellmargin,
+    borderRadius: 4,
   },
 });

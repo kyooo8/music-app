@@ -1,7 +1,7 @@
-import React, { useState, useContext } from "react";
+import { useEffect, useState, useContext } from "react";
 import { View, TextInput, StyleSheet, Keyboard } from "react-native";
 import { ThemedText } from "./ThemedText";
-import { ChordContext } from "@/ChordContext";
+import { ChordContext } from "@/MusicContext";
 import { Colors } from "@/constants/Colors";
 
 export const Bpm = () => {
@@ -27,7 +27,7 @@ export const Bpm = () => {
     }
   };
 
-  React.useEffect(() => {
+  useEffect(() => {
     setTempValue(String(bpm));
   }, [bpm]);
 

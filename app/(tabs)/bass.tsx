@@ -1,6 +1,7 @@
-import React, { useContext, useEffect, useRef } from "react";
+// Bass.tsx
+import { useContext, useEffect, useRef } from "react";
 import { ScrollView, View, StyleSheet } from "react-native";
-import { ChordContext } from "../../ChordContext";
+import { ChordContext } from "../../MusicContext";
 import { ThemedText } from "@/components/ThemedText";
 import { Colors } from "@/constants/Colors";
 import { BassParts } from "@/components/BassParts";
@@ -22,12 +23,43 @@ const BassInputScreen = () => {
   const verticalScrollRef = useRef<ScrollView>(null);
   const horizontalScrllRef = useRef<ScrollView>(null);
 
-  // Melody 初期化
   useEffect(() => {
-    if (bass.length !== chordProgression.length) {
-      setBass(chordProgression.map(() => Array(4).fill(-1)));
+    if (!chordProgression) return;
+    const measureCount = Object.keys(chordProgression).length;
+    const currentBassCount = bass ? Object.keys(bass).length : 0;
+
+    if (currentBassCount !== measureCount) {
+      const newBass: {
+        [measure: number]: {
+          [beat: number]: { relativePos: number; duration: string } | null;
+        };
+      } = {};
+
+      for (let m = 0; m < measureCount; m++) {
+        const measureObj: { [beat: number]: null } = {};
+        for (let b = 0; b < 4; b++) {
+          measureObj[b] = null;
+        }
+        newBass[m] = measureObj;
+      }
+
+      setBass(newBass);
     }
-  }, [chordProgression, bass.length, setBass]);
+  }, [chordProgression, bass, setBass]);
+
+  const chordEntries = chordProgression
+    ? (
+        Object.entries(chordProgression) as [
+          string,
+          { chord: number; shape: string }
+        ][]
+      )
+        .map(
+          ([k, v]) =>
+            [Number(k), v] as [number, { chord: number; shape: string }]
+        )
+        .sort((a, b) => a[0] - b[0])
+    : [];
 
   return (
     <View style={[styles.container, { backgroundColor: bg }]}>
@@ -38,11 +70,10 @@ const BassInputScreen = () => {
           <ToggleButton />
         </View>
       </View>
-      {chordProgression && chordProgression.length > 0 ? (
+      {chordProgression && chordEntries.length > 0 ? (
         <>
           {/* コード進行の表示 */}
           <View style={styles.chordRow}>
-            {/* 音階ラベル部分と位置合わせするため、noteLabelContainerを外側に配置 */}
             <View style={{ width: 44.3 }}></View>
             <ScrollView
               horizontal
@@ -50,19 +81,15 @@ const BassInputScreen = () => {
               ref={horizontalScrllRef}
               scrollEventThrottle={16}
             >
-              {chordProgression.map((chordIndex, index) => (
+              {chordEntries.map(([index, chordItem]) => (
                 <View key={index} style={styles.chordCell}>
-                  <ThemedText>
-                    {scaleNotes ? scaleNotes[chordIndex] : ""}
-                  </ThemedText>
+                  <ThemedText>{scaleNotes[chordItem.chord] || ""}</ThemedText>
                 </View>
               ))}
             </ScrollView>
           </View>
 
-          {/* 音階ラベルとメロディーグリッド */}
           <View style={styles.gridContainer}>
-            {/* 音階ラベル */}
             <ScrollView
               ref={verticalScrollRef}
               showsVerticalScrollIndicator={false}
@@ -76,7 +103,6 @@ const BassInputScreen = () => {
               ))}
             </ScrollView>
 
-            {/* メロディーグリッド (横スクロール時にコード進行も同期) */}
             <ScrollView
               horizontal
               showsHorizontalScrollIndicator={false}
@@ -102,12 +128,12 @@ const BassInputScreen = () => {
               >
                 {[...sortedMelodyNotes].reverse().map((note, noteIndex) => (
                   <View key={noteIndex} style={styles.noteRow}>
-                    {chordProgression.map((thisChordIndex, chordIndex) => (
+                    {chordEntries.map(([thisChordIndex, chordItem]) => (
                       <BassParts
-                        key={`${chordIndex}-${noteIndex}`}
+                        key={`${thisChordIndex}-${noteIndex}`}
                         note={note}
-                        chordIndex={chordIndex}
-                        thisChordIndex={thisChordIndex}
+                        chordIndex={thisChordIndex}
+                        chordItem={chordItem}
                       />
                     ))}
                   </View>
@@ -115,32 +141,6 @@ const BassInputScreen = () => {
               </ScrollView>
             </ScrollView>
           </View>
-
-          {/* 現在のメロディー表示 */}
-          {/* <View style={styles.melodyContainer}>
-            <ThemedText>現在のbass:</ThemedText>
-            {bass.map((chordBass, chordIndex) => {
-              const chordNote =
-                scaleNotes &&
-                chordProgression[chordIndex] !== undefined &&
-                chordProgression[chordIndex] < sortedMelodyNotes.length
-                  ? scaleNotes[chordProgression[chordIndex]]
-                  : "未定義";
-
-              return (
-                <ThemedText key={chordIndex}>
-                  {chordNote}:{" "}
-                  {chordBass
-                    .map((noteIndex) =>
-                      noteIndex !== -1
-                        ? sortedMelodyNotes[noteIndex]?.name || ""
-                        : "-"
-                    )
-                    .join(", ")}
-                </ThemedText>
-              );
-            })}
-          </View> */}
         </>
       ) : (
         <View style={styles.emptyContainer}>
@@ -190,10 +190,6 @@ const styles = StyleSheet.create({
   noteRow: {
     flexDirection: "row",
     alignItems: "center",
-  },
-  melodyContainer: {
-    height: "20%",
-    padding: 10,
   },
   emptyContainer: {
     flex: 1,

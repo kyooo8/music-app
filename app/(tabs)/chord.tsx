@@ -1,6 +1,7 @@
 import { StyleSheet, View } from "react-native";
 import { useEffect, useContext } from "react";
-import { ChordContext, ScaleType } from "@/ChordContext";
+import { ChordContext } from "@/MusicContext";
+import { ScaleType } from "@/types/music";
 import { Colors } from "@/constants/Colors";
 import { ThemedText } from "@/components/ThemedText";
 import { OctaveCircle } from "@/components/OctaveCircle";
@@ -65,7 +66,9 @@ export default function HomeScreen() {
           <ToggleButton />
         </View>
       </View>
-      <ThemedText style={styles.rootText}>ルート：{root}</ThemedText>
+      <ThemedText style={styles.rootText}>
+        ルート：{root ? (scaleType === "メジャー" ? root : root + "m") : "なし"}
+      </ThemedText>
       <View style={[styles.circle, { backgroundColor: bgCircle }]}>
         <View style={[styles.innerCircle, { backgroundColor: bg }]} />
         <ScaleCircle />

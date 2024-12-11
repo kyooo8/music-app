@@ -1,13 +1,14 @@
 import { Tabs } from "expo-router";
-import { Text } from "react-native";
-import { ChordProvider, ChordContext } from "@/ChordContext";
 import { Colors } from "@/constants/Colors";
-import Icon from "@/components/Icon";
+import { ChordContext } from "@/MusicContext";
+import { Icon } from "@/components/Icon";
+import { ThemedText } from "@/components/ThemedText";
+import { ChordProvider } from "@/MusicContext";
+import { SaveButton } from "@/components/SaveButton";
 
 export default function TabLayout() {
   const tint = Colors.dark.tint;
   const tab = Colors.dark.tab;
-  const text = Colors.dark.text;
   return (
     <ChordProvider>
       <Tabs
@@ -20,12 +21,8 @@ export default function TabLayout() {
             borderTopWidth: 0,
             borderTopColor: "transparent",
           },
-          headerStyle: {
-            backgroundColor: tab,
-          },
-          headerTitleStyle: {
-            color: text,
-          },
+          headerStyle: { backgroundColor: tab },
+          headerRight: () => <SaveButton />,
         }}
       >
         <Tabs.Screen
@@ -35,23 +32,37 @@ export default function TabLayout() {
             tabBarIcon: ({ color, focused }) => (
               <ChordContext.Consumer>
                 {(context) => {
-                  const { root } = context;
+                  const { root, scaleType } = context; // ChordContextからrootとscaleTypeを取得
+
+                  // mが表示される場合にフォントサイズを調整
+                  const fontSize =
+                    root && scaleType !== "メジャー"
+                      ? root.length === 2
+                        ? 14
+                        : 18
+                      : 20;
+
                   return (
-                    <Text
+                    <ThemedText
                       style={{
                         fontWeight: "bold",
                         color: focused ? tint : color,
-                        fontSize: 20,
+                        fontSize, // フォントサイズを変更
                       }}
                     >
-                      {root ? root : "C"}
-                    </Text>
+                      {root
+                        ? scaleType === "メジャー"
+                          ? root
+                          : root + "m"
+                        : "C"}
+                    </ThemedText>
                   );
                 }}
               </ChordContext.Consumer>
             ),
           }}
         />
+
         <Tabs.Screen
           name="melody"
           options={{

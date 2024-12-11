@@ -1,7 +1,8 @@
-import React, { useContext } from "react";
+// DramParts.tsx
+import { useContext } from "react";
 import { View, StyleSheet, TouchableOpacity } from "react-native";
 import { Colors } from "@/constants/Colors";
-import { ChordContext } from "@/ChordContext";
+import { ChordContext } from "@/MusicContext";
 import {
   cellheight,
   cellmargin,
@@ -11,10 +12,10 @@ import {
 import { ThemedText } from "./ThemedText";
 
 interface Props {
-  note: string; // 対象の音階名
-  chordIndex: number; // どのコード進行インデックスか
-  noteIndex: number; // どの行(9行のうちどれか)か
-  dramNotes: string[]; // 使用可能なドラムノートの一覧
+  note: string;
+  chordIndex: number; // measure
+  noteIndex: number; // instrument index
+  dramNotes: string[];
 }
 
 export const DramParts = ({
@@ -27,33 +28,43 @@ export const DramParts = ({
   const tint = Colors.dark.tint;
   const { dram, setDram } = useContext(ChordContext);
 
-  // セルタップ時の処理
-  const handleNoteInput = (chordIndex: number, smallNoteIndex: number) => {
-    setDram((prevDram) => {
-      const updatedDram = prevDram.map((chord) => chord.map((row) => [...row])); // deep copy
+  // ドラムは1小節16ステップ
+  // dram: { [measure: number]: { [instrument: number]: { [step: number]: boolean } } }
+  // instrument = noteIndex
+  // steps: 0~15
 
-      const notePosition = dramNotes.indexOf(note);
-      const currentValue = updatedDram[chordIndex][noteIndex][smallNoteIndex];
+  const handleNoteInput = (
+    measure: number,
+    instrument: number,
+    step: number
+  ) => {
+    setDram((prev) => {
+      const oldDram = prev || {};
+      const measureObj = oldDram[measure] || {};
+      const instrumentObj = measureObj[instrument] || {};
+      const current = instrumentObj[step] || false;
+      const newVal = !current;
 
-      // 同じ音がすでに選択されていたら解除、そうでなければ選択
-      if (currentValue) {
-        updatedDram[chordIndex][noteIndex][smallNoteIndex] = false;
-      } else {
-        updatedDram[chordIndex][noteIndex][smallNoteIndex] = true;
-      }
-
-      return updatedDram;
+      return {
+        ...oldDram,
+        [measure]: {
+          ...measureObj,
+          [instrument]: {
+            ...instrumentObj,
+            [step]: newVal,
+          },
+        },
+      };
     });
   };
 
   return (
     <View style={styles.chordColumn}>
-      {Array(4)
+      {Array(16)
         .fill(null)
-        .map((_, smallNoteIndex) => {
-          const cellKey = `${note}-${chordIndex}-${smallNoteIndex}`;
-          const isSelected = dram[chordIndex]?.[noteIndex]?.[smallNoteIndex];
-
+        .map((_, step) => {
+          const cellKey = `${note}-${chordIndex}-${noteIndex}-${step}`;
+          const isSelected = dram?.[chordIndex]?.[noteIndex]?.[step] || false;
           return (
             <TouchableOpacity
               key={cellKey}
@@ -61,7 +72,7 @@ export const DramParts = ({
                 styles.gridCell,
                 { backgroundColor: isSelected ? tint : tab },
               ]}
-              onPress={() => handleNoteInput(chordIndex, smallNoteIndex)}
+              onPress={() => handleNoteInput(chordIndex, noteIndex, step)}
             >
               <ThemedText>{note}</ThemedText>
             </TouchableOpacity>
@@ -75,7 +86,7 @@ const styles = StyleSheet.create({
   chordColumn: {
     flexDirection: "row",
     alignItems: "center",
-    marginRight: lastItemMargin, // グリッド間の余白
+    marginRight: lastItemMargin,
   },
   gridCell: {
     width: cellWidth,
