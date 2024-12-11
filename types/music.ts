@@ -1,6 +1,6 @@
 export type ScaleType = "メジャー" | "マイナー";
-
-export type NoteData = { relativePos: number; duration: string } | null;
+type NoteDuration = "whole" | "half" | "quarter" | "eighth" | "sixteenth";
+export type NoteData = { relativePos: number; duration: NoteDuration } | null;
 export type MelobassData = {
   [measure: number]: {
     [beat: number]: NoteData;
@@ -16,6 +16,7 @@ export type DramData = {
 } | null;
 
 export type ChordItem = { chord: number; shape: string };
+
 export type ChordProgressionData = {
   [index: number]: ChordItem;
 } | null;

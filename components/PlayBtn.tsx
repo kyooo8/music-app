@@ -1,11 +1,11 @@
 // PlayBtn.tsx
 import { TouchableOpacity, View, StyleSheet, Text } from "react-native";
 import { Icon } from "./Icon";
-import { useChordPlayer } from "@/hooks/useChordPlayer";
+import { useMusicPlayer } from "@/hooks/useMusicPlayer";
 import { Colors } from "@/constants/Colors";
 
 export const PlayBtn = () => {
-  const { playing, play, stop } = useChordPlayer();
+  const { playing, play, stop } = useMusicPlayer();
   const bg = Colors.dark.circle;
   return (
     <View>

@@ -1,20 +1,23 @@
-// useChordPlayer.ts
-import { useContext, useState } from "react";
+// useMusicPlayer.ts
+import { useContext, useState, useRef } from "react";
 import { ChordContext } from "@/MusicContext";
 import { playMusic } from "./playMusicLogic";
 
-export function useChordPlayer() {
+export function useMusicPlayer() {
   const {
     root,
     bpm,
     scaleType,
+    scaleNotes,
     chordProgression,
     melody,
     bass,
     dram,
     sortedMelodyNotes,
   } = useContext(ChordContext);
+
   const [playing, setPlaying] = useState(false);
+  const shouldContinueRef = useRef(false); // 再生中フラグをrefで管理
 
   const play = async () => {
     if (!root || !chordProgression || !melody || !bass || !dram) {
@@ -23,34 +26,36 @@ export function useChordPlayer() {
     }
 
     setPlaying(true);
+    shouldContinueRef.current = true;
+
     try {
       await playMusic(
         {
           root,
           bpm,
           scaleType,
-          scaleNotes: {}, // scaleNotesが必要ならここで設定
+          scaleNotes: scaleNotes, // ChordContext から取得したものを渡す
           chordProgression,
           melody,
           bass,
           dram,
-          // sortedMelodyNotesをオブジェクト化
           sortedMelodyNotes: Object.fromEntries(
             sortedMelodyNotes.map((n, i) => [i, n])
           ),
         },
-        () => playing // playingの状態をクロージャで参照
+        () => shouldContinueRef.current // refから現在のshouldContinueを返す
       );
     } catch (err) {
       console.log("Playback error:", err);
     } finally {
-      // 再生終了時またはstop時にここへ
+      // 音源再生が終了した後にplayingをfalseへ
       setPlaying(false);
     }
   };
 
   const stop = () => {
     // playMusic内でshouldContinue()がfalseになるまで待って終了
+    shouldContinueRef.current = false;
     setPlaying(false);
   };
 
