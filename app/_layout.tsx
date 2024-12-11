@@ -13,9 +13,7 @@ import { useColorScheme } from "@/hooks/useColorScheme";
 import { Colors } from "@/constants/Colors";
 
 import "react-native-get-random-values";
-import LogOutButton from "@/components/LogOutButton";
-import SaveButton from "@/components/SaveButton";
-import { ChordProvider } from "@/MusicContext";
+import { LogOutButton } from "@/components/LogOutButton";
 
 // Prevent the splash screen from auto-hiding before asset loading is complete.
 SplashScreen.preventAutoHideAsync();
@@ -39,36 +37,29 @@ export default function RootLayout() {
   }
 
   return (
-    <ChordProvider>
-      <ThemeProvider value={colorScheme === "dark" ? DarkTheme : DefaultTheme}>
-        <StatusBar style="light" />
-        <Stack
-          screenOptions={{
-            title: "",
-            headerShown: true,
-            headerStyle: {
-              backgroundColor: tab,
-            },
-            headerTitleStyle: {
-              color: text,
-            },
+    <ThemeProvider value={colorScheme === "dark" ? DarkTheme : DefaultTheme}>
+      <StatusBar style="light" />
+      <Stack
+        screenOptions={{
+          title: "",
+          headerShown: true,
+          headerStyle: {
+            backgroundColor: tab,
+          },
+          headerTitleStyle: {
+            color: text,
+          },
+        }}
+      >
+        <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+        <Stack.Screen
+          name="list"
+          options={{
+            headerRight: () => <LogOutButton />,
           }}
-        >
-          <Stack.Screen
-            name="(tabs)"
-            options={{
-              headerRight: () => <SaveButton />,
-            }}
-          />
-          <Stack.Screen
-            name="list"
-            options={{
-              headerRight: () => <LogOutButton />,
-            }}
-          />
-          <Stack.Screen name="+not-found" />
-        </Stack>
-      </ThemeProvider>
-    </ChordProvider>
+        />
+        <Stack.Screen name="+not-found" />
+      </Stack>
+    </ThemeProvider>
   );
 }

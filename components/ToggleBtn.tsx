@@ -1,4 +1,4 @@
-import React, { useState, useContext } from "react";
+import { useState, useContext } from "react";
 import { ChordContext } from "@/MusicContext";
 import { Text, TouchableOpacity, StyleSheet, Animated } from "react-native";
 

@@ -21,7 +21,7 @@ interface Props {
   style?: ViewStyle;
 }
 
-const Icon = (props: Props) => {
+export const Icon = (props: Props) => {
   const [fontLoaded] = useFonts({ IcoMoon: fontData });
   if (!fontLoaded) {
     return null;
@@ -34,5 +34,3 @@ const Icon = (props: Props) => {
     />
   );
 };
-
-export default Icon;

@@ -1,5 +1,5 @@
 // Bass.tsx
-import React, { useContext, useEffect, useRef } from "react";
+import { useContext, useEffect, useRef } from "react";
 import { ScrollView, View, StyleSheet } from "react-native";
 import { ChordContext } from "../../MusicContext";
 import { ThemedText } from "@/components/ThemedText";

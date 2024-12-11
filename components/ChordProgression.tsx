@@ -1,9 +1,9 @@
 // ChordProgression.tsx
-import React, { useEffect, useState, useCallback, useContext } from "react";
+import { useEffect, useState, useCallback, useContext } from "react";
 import { StyleSheet, View, TouchableOpacity, FlatList } from "react-native";
 import { ChordContext } from "@/MusicContext";
 import { ThemedText } from "@/components/ThemedText";
-import Icon from "./Icon";
+import { Icon } from "./Icon";
 import { v4 as uuidv4 } from "uuid";
 import { Colors } from "@/constants/Colors";
 
@@ -13,7 +13,7 @@ interface ChordDisplayItem {
   chordIndex: number; // chordItem.chord
 }
 
-export function ChordProgression() {
+export const ChordProgression = () => {
   const { root, scaleNotes, chordProgression, setChordProgression } =
     useContext(ChordContext);
   const [showPlusIndices, setShowPlusIndices] = useState<number[]>([]);
@@ -152,7 +152,7 @@ export function ChordProgression() {
       />
     </View>
   );
-}
+};
 
 const styles = StyleSheet.create({
   container: {

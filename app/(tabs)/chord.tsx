@@ -1,6 +1,7 @@
 import { StyleSheet, View } from "react-native";
 import { useEffect, useContext } from "react";
-import { ChordContext, ScaleType } from "@/MusicContext";
+import { ChordContext } from "@/MusicContext";
+import { ScaleType } from "@/types/music";
 import { Colors } from "@/constants/Colors";
 import { ThemedText } from "@/components/ThemedText";
 import { OctaveCircle } from "@/components/OctaveCircle";

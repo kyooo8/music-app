@@ -1,8 +1,8 @@
-import React, { useContext, useEffect, useRef } from "react";
+import { useContext, useEffect, useRef } from "react";
 import { Animated, StyleSheet } from "react-native";
 import { ChordContext } from "@/MusicContext";
 
-export function ScaleCircle() {
+export const ScaleCircle = () => {
   const { scaleType, root } = useContext(ChordContext);
   const rotation = useRef(new Animated.Value(0)).current;
 
@@ -38,7 +38,7 @@ export function ScaleCircle() {
       )}
     </>
   );
-}
+};
 
 const styles = StyleSheet.create({
   scaleCircle: {

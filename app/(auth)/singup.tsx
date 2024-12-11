@@ -10,7 +10,7 @@ import { Link, router } from "expo-router";
 import { ThemedText } from "@/components/ThemedText";
 import { Colors } from "@/constants/Colors";
 
-import { auth } from "@/config";
+import { auth } from "@/firebase/firebaseConfig";
 import { createUserWithEmailAndPassword } from "firebase/auth";
 
 const handlePress = (email: string, password: string) => {

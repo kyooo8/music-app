@@ -9,9 +9,9 @@ import {
 import { useRef, useEffect, useContext } from "react";
 import { ChordContext } from "@/MusicContext";
 import { Colors } from "@/constants/Colors";
-import { ChordItem } from "@/MusicContext";
+import { ChordItem } from "@/types/music";
 
-export function OctaveCircle() {
+export const OctaveCircle = () => {
   const {
     notes,
     scaleNotes,
@@ -163,7 +163,7 @@ export function OctaveCircle() {
       </Animated.View>
     </View>
   );
-}
+};
 
 const styles = StyleSheet.create({
   container: {

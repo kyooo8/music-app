@@ -1,54 +1,52 @@
-import { StyleSheet, TouchableOpacity, View } from "react-native";
+import { StyleSheet, TouchableOpacity, View, FlatList } from "react-native";
 import { ThemedText } from "@/components/ThemedText";
 import { router } from "expo-router";
 import { Colors } from "@/constants/Colors";
+import { useEffect, useState } from "react";
+import { collection, onSnapshot, orderBy, query } from "firebase/firestore";
+import { auth, db } from "@/firebase/firebaseConfig";
+import { ProjecctListItem } from "@/components/ProjectListItem";
+import { Project } from "@/types/project";
 
 export default function ListPage() {
+  const [projects, setprojects] = useState<Project[]>([]);
+
+  useEffect(() => {
+    const ref = collection(db, `users/${auth.currentUser?.uid}/projects`);
+    const q = query(ref, orderBy("updatedAt", "desc"));
+    const unsubscribe = onSnapshot(q, (snapShot) => {
+      const remoteProjects: Project[] = [];
+      snapShot.forEach((doc) => {
+        const { title, description, root, bpm, scaleType, updatedAt } =
+          doc.data();
+        remoteProjects.push({
+          id: doc.id,
+          title,
+          description,
+          root,
+          bpm,
+          scaleType,
+          updatedAt,
+        });
+      });
+      setprojects(remoteProjects);
+    });
+    return unsubscribe;
+  }, []);
   return (
     <View style={styles.container}>
       <View style={styles.listContainer}>
+        <FlatList
+          data={projects}
+          renderItem={({ item }) => <ProjecctListItem project={item} />}
+        />
         <TouchableOpacity
-          style={styles.musicContainer}
+          style={styles.createBtn}
           onPress={() => router.replace("/(tabs)/chord")}
         >
-          <View style={styles.leftBox}>
-            <ThemedText type="title">サンプル</ThemedText>
-            <View>
-              <ThemedText>BPM : 120</ThemedText>
-              <ThemedText>key : C</ThemedText>
-            </View>
-          </View>
-          <View>
-            <ThemedText style={{ marginBottom: 30 }}>2024/10/27</ThemedText>
-            <ThemedText>奇跡の音楽</ThemedText>
-          </View>
+          <ThemedText type="title">+</ThemedText>
         </TouchableOpacity>
-        <View style={styles.bar}></View>
-        <TouchableOpacity
-          style={styles.musicContainer}
-          onPress={() => router.replace("/(tabs)/chord")}
-        >
-          <View style={styles.leftBox}>
-            <ThemedText type="title">サンプル</ThemedText>
-            <View>
-              <ThemedText>BPM : 120</ThemedText>
-              <ThemedText>key : C</ThemedText>
-            </View>
-          </View>
-          <View>
-            <ThemedText style={{ marginBottom: 30 }}>2024/10/27</ThemedText>
-            <ThemedText>奇跡の音楽</ThemedText>
-          </View>
-        </TouchableOpacity>
-        <View style={styles.bar}></View>
       </View>
-
-      <TouchableOpacity
-        style={styles.createBtn}
-        onPress={() => router.replace("/(tabs)/chord")}
-      >
-        <ThemedText type="title">+</ThemedText>
-      </TouchableOpacity>
     </View>
   );
 }
@@ -63,20 +61,6 @@ const styles = StyleSheet.create({
     flex: 1,
     width: "80%",
     marginInline: "auto",
-  },
-  musicContainer: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    height: 105,
-  },
-  leftBox: {
-    justifyContent: "space-between",
-  },
-  bar: {
-    borderBottomWidth: 1,
-    borderBottomColor: "#fff",
-    marginTop: 10,
-    marginBottom: 30,
   },
   createBtn: {
     backgroundColor: Colors.dark.tint,
