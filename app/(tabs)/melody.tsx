@@ -40,7 +40,7 @@ export default function MelodyPage() {
 
       setMelody(newMelody);
     }
-  }, [chordProgression, melody, setMelody]);
+  }, [melody, setMelody]);
 
   const chordEntries = chordProgression
     ? Object.entries(chordProgression)

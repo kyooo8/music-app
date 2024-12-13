@@ -7,11 +7,11 @@ import { ToggleButton } from "./ToggleBtn";
 export const HeaderBottom = () => {
   return (
     <View style={styles.settingContainer}>
-      <PlayBtn />
-      <View style={{ position: "absolute", right: 10 }}>
+      <View style={{ position: "absolute", left: 10 }}>
         <Bpm />
         <ToggleButton />
       </View>
+      <PlayBtn />
     </View>
   );
 };

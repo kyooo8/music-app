@@ -59,7 +59,7 @@ export default function HomeScreen() {
   return (
     <ThemedView style={styles.container}>
       <HeaderBottom />
-      <ThemedText style={styles.rootText}>
+      <ThemedText>
         ルート：{root ? (scaleType === "メジャー" ? root : root + "m") : "なし"}
       </ThemedText>
       <View style={[styles.circle, { backgroundColor: bgCircle }]}>
@@ -77,12 +77,6 @@ const styles = StyleSheet.create({
     flex: 1,
     alignItems: "center",
   },
-  settingContainer: {
-    position: "relative",
-    width: "100%",
-    marginTop: 16,
-  },
-  rootText: { marginTop: 56 },
   circle: {
     width: 320,
     height: 320,

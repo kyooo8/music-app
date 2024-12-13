@@ -45,35 +45,6 @@ export const ChordProgression = () => {
     });
   }, []);
 
-  const handleAddChord = useCallback(
-    (index: number) => {
-      setChordProgression((prev) => {
-        if (!prev) return prev;
-        const entries = Object.entries(prev)
-          .map(
-            ([k, v]) =>
-              [Number(k), v] as [number, { chord: number; shape: string }]
-          )
-          .sort((a, b) => a[0] - b[0]);
-
-        if (entries.length >= 8) {
-          alert("最大8個まで");
-          return prev;
-        }
-
-        const pos = entries.findIndex(([i]) => i === index);
-        if (pos === -1) return prev;
-        const chordToInsert = entries[pos][1];
-        entries.splice(pos + 1, 0, [0, chordToInsert]);
-        entries.forEach((e, i) => {
-          e[0] = i;
-        });
-        return Object.fromEntries(entries.map(([i, v]) => [i, v]));
-      });
-    },
-    [setChordProgression]
-  );
-
   const deleteChord = useCallback(
     (index: number) => {
       setChordProgression((prev) => {
@@ -125,7 +96,7 @@ export const ChordProgression = () => {
         </TouchableOpacity>
       );
     },
-    [showPlusIndices, handleLongPress, deleteChord, handleAddChord, scaleNotes]
+    [showPlusIndices, handleLongPress, deleteChord, scaleNotes]
   );
 
   return (
@@ -160,11 +131,4 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     alignItems: "center",
   },
-
-  // plus: {
-  //   position: "absolute",
-  //   bottom: 3,
-  //   right: 3,
-  //   height: "100%",
-  // },
 });
