@@ -14,7 +14,7 @@ interface ChordDisplayItem {
 
 export const ChordProgression = () => {
   const tab = useThemeColor({}, "tab");
-  const card = useThemeColor({}, "tabIconDefault");
+  const card = useThemeColor({}, "icon");
 
   const { scaleNotes, chordProgression, setChordProgression } =
     useContext(MusicContext);

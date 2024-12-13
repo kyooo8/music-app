@@ -3,6 +3,7 @@ import { signOut } from "firebase/auth";
 
 import { auth } from "@/firebase/firebaseConfig";
 import { router } from "expo-router";
+import { useThemeColor } from "@/hooks/useThemeColor";
 
 const handlePress = (): void => {
   signOut(auth)
@@ -15,9 +16,10 @@ const handlePress = (): void => {
 };
 
 export const LogOutButton = (): JSX.Element => {
+  const text = useThemeColor({}, "icon");
   return (
     <TouchableOpacity onPress={handlePress}>
-      <Text style={styles.text}>ログアウト</Text>
+      <Text style={[styles.text, { color: text }]}>ログアウト</Text>
     </TouchableOpacity>
   );
 };
@@ -26,6 +28,5 @@ const styles = StyleSheet.create({
   text: {
     fontSize: 12,
     lineHeight: 24,
-    color: "rgba(255,255,255,0.7)",
   },
 });

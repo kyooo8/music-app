@@ -50,7 +50,7 @@ export default function ListPage() {
         style={[styles.createBtn, { backgroundColor: tint }]}
         onPress={() => router.replace("/(tabs)/chord")}
       >
-        <Text style={[styles.createText, { color: text }]}>+</Text>
+        <Text style={[styles.createText]}>+</Text>
       </TouchableOpacity>
     </ThemedView>
   );
@@ -78,5 +78,6 @@ const styles = StyleSheet.create({
   createText: {
     fontSize: 40,
     lineHeight: 44,
+    color: "#ffffff",
   },
 });

@@ -4,8 +4,10 @@ import { auth, db } from "@/firebase/firebaseConfig";
 import { router } from "expo-router";
 import { useContext } from "react";
 import { MusicContext } from "@/MusicContext";
+import { useThemeColor } from "@/hooks/useThemeColor";
 
 export const SaveButton = () => {
+  const text = useThemeColor({}, "icon");
   const {
     id,
     title,
@@ -46,7 +48,6 @@ export const SaveButton = () => {
       });
       router.replace("/");
     } else {
-      // First prompt for title
       Alert.prompt(
         "保存",
         "タイトルを入力してください",
@@ -117,7 +118,7 @@ export const SaveButton = () => {
 
   return (
     <TouchableOpacity onPress={handlePress}>
-      <Text style={styles.text}>保存</Text>
+      <Text style={[styles.text, { color: text }]}>保存</Text>
     </TouchableOpacity>
   );
 };
@@ -126,7 +127,6 @@ const styles = StyleSheet.create({
   text: {
     fontSize: 16,
     lineHeight: 22,
-    color: "rgba(255,255,255,0.7)",
     marginRight: 8,
   },
 });
