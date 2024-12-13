@@ -1,21 +1,20 @@
 import { StyleSheet, View } from "react-native";
 import { useEffect, useContext } from "react";
-import { ChordContext } from "@/MusicContext";
+
 import { ScaleType } from "@/types/music";
-import { Colors } from "@/constants/Colors";
+import { MusicContext } from "@/MusicContext";
 import { ThemedText } from "@/components/ThemedText";
 import { OctaveCircle } from "@/components/OctaveCircle";
 import { ScaleCircle } from "@/components/ScaleCircle";
 import { ChordProgression } from "@/components/ChordProgression";
-import { ToggleButton } from "@/components/ToggleBtn";
-import { Bpm } from "@/components/Bpm";
-import { PlayBtn } from "@/components/PlayBtn";
+import { HeaderBottom } from "@/components/HeaderBottom";
+import { ThemedView } from "@/components/ThemedView";
+import { useThemeColor } from "@/hooks/useThemeColor";
 
 export default function HomeScreen() {
+  const bgCircle = useThemeColor({}, "circle");
   const { notes, root, setRoot, scaleType, setScaleNotes } =
-    useContext(ChordContext);
-  const bg = Colors.dark.background;
-  const bgCircle = Colors.dark.circle;
+    useContext(MusicContext);
 
   const handleNoteSelect = (note: string) => {
     setRoot(note);
@@ -58,24 +57,18 @@ export default function HomeScreen() {
   }, [scaleType, root]);
 
   return (
-    <View style={[styles.container, { backgroundColor: bg }]}>
-      <View style={styles.settingContainer}>
-        <PlayBtn />
-        <View style={{ position: "absolute", right: 10 }}>
-          <Bpm />
-          <ToggleButton />
-        </View>
-      </View>
+    <ThemedView style={styles.container}>
+      <HeaderBottom />
       <ThemedText style={styles.rootText}>
         ルート：{root ? (scaleType === "メジャー" ? root : root + "m") : "なし"}
       </ThemedText>
       <View style={[styles.circle, { backgroundColor: bgCircle }]}>
-        <View style={[styles.innerCircle, { backgroundColor: bg }]} />
+        <ThemedView style={styles.innerCircle} />
         <ScaleCircle />
         <OctaveCircle />
       </View>
       <ChordProgression />
-    </View>
+    </ThemedView>
   );
 }
 

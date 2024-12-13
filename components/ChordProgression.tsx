@@ -1,24 +1,23 @@
-// ChordProgression.tsx
-import { useEffect, useState, useCallback, useContext } from "react";
+import React, { useEffect, useState, useCallback, useContext } from "react";
 import { StyleSheet, View, TouchableOpacity, FlatList } from "react-native";
-import { ChordContext } from "@/MusicContext";
+import { MusicContext } from "@/MusicContext";
 import { ThemedText } from "@/components/ThemedText";
 import { Icon } from "./Icon";
 import { v4 as uuidv4 } from "uuid";
-import { Colors } from "@/constants/Colors";
+import { useThemeColor } from "@/hooks/useThemeColor";
 
 interface ChordDisplayItem {
   id: string;
-  index: number; // chordProgressionのキー
-  chordIndex: number; // chordItem.chord
+  index: number;
+  chordIndex: number;
 }
 
 export const ChordProgression = () => {
-  const { root, scaleNotes, chordProgression, setChordProgression } =
-    useContext(ChordContext);
-  const [showPlusIndices, setShowPlusIndices] = useState<number[]>([]);
-  const bg = Colors.dark.tab;
+  const tab = useThemeColor({}, "tab");
 
+  const { scaleNotes, chordProgression, setChordProgression } =
+    useContext(MusicContext);
+  const [showPlusIndices, setShowPlusIndices] = useState<number[]>([]);
   const [data, setData] = useState<ChordDisplayItem[]>([]);
 
   useEffect(() => {
@@ -65,10 +64,7 @@ export const ChordProgression = () => {
         const pos = entries.findIndex(([i]) => i === index);
         if (pos === -1) return prev;
         const chordToInsert = entries[pos][1];
-        // 新しいコードを同じchordで挿入
-        // pos+1に挿入
         entries.splice(pos + 1, 0, [0, chordToInsert]);
-        // キーを0から再割当
         entries.forEach((e, i) => {
           e[0] = i;
         });
@@ -92,7 +88,6 @@ export const ChordProgression = () => {
         const pos = entries.findIndex(([i]) => i === index);
         if (pos === -1) return prev;
         entries.splice(pos, 1);
-        // 再割当
         entries.forEach((e, i) => {
           e[0] = i;
         });
@@ -109,30 +104,23 @@ export const ChordProgression = () => {
 
       return (
         <TouchableOpacity
-          style={styles.chordCard}
+          style={[styles.chordCard, { backgroundColor: "#bbbb" }]}
           onLongPress={() => handleLongPress(item.index)}
           activeOpacity={0.8}
+          onPress={() => {
+            isShowPlus && deleteChord(item.index);
+          }}
         >
-          {isShowPlus && (
-            <View style={styles.chordSetting}>
-              <TouchableOpacity
-                onPress={() => deleteChord(item.index)}
-                style={styles.settingButton}
-              >
-                <Icon name="bin2" size={15} color="red" />
-              </TouchableOpacity>
-              <TouchableOpacity
-                onPress={() => handleAddChord(item.index)}
-                style={styles.settingButton}
-              >
-                <Icon name="plus" size={25} color="green" />
-              </TouchableOpacity>
-            </View>
-          )}
           <ThemedText type="title">
-            {scaleNotes && scaleNotes[item.chordIndex]
-              ? scaleNotes[item.chordIndex]
-              : ""}
+            {scaleNotes ? (
+              isShowPlus ? (
+                <Icon name="bin2" size={15} color="red" />
+              ) : (
+                scaleNotes[item.chordIndex]
+              )
+            ) : (
+              ""
+            )}
           </ThemedText>
         </TouchableOpacity>
       );
@@ -141,59 +129,42 @@ export const ChordProgression = () => {
   );
 
   return (
-    <View style={[styles.container, { backgroundColor: bg }]}>
-      <ThemedText style={styles.title}>コード進行</ThemedText>
+    <View style={[styles.chordProgressionContainer, { backgroundColor: tab }]}>
+      <ThemedText type="subtitle">コード進行</ThemedText>
       <FlatList
         horizontal
         data={data}
         renderItem={renderItem}
         keyExtractor={(item) => item.id}
-        contentContainerStyle={styles.chordProgression}
+        style={styles.flatList}
       />
     </View>
   );
 };
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    width: "90%",
-    marginVertical: 30,
-    borderRadius: 16,
-    padding: 10,
+  chordProgressionContainer: {
+    width: "100%",
+    maxWidth: 350,
+    marginTop: 30,
+    padding: 20,
+    borderRadius: 8,
   },
-  chordProgression: {
-    flexDirection: "row",
-    alignItems: "center",
-    paddingHorizontal: 40,
-  },
-  title: {
-    marginTop: 20,
-    marginLeft: 20,
-    fontSize: 18,
-    fontWeight: "bold",
+  flatList: {
+    marginTop: 10,
   },
   chordCard: {
-    borderColor: "#000000",
-    borderWidth: 2,
-    paddingVertical: 20,
-    borderRadius: 8,
-    marginRight: 20,
-    position: "relative",
+    marginRight: 10,
+    padding: 20,
     width: 60,
+    borderRadius: 8,
     alignItems: "center",
-    justifyContent: "center",
   },
-  chordSetting: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    width: "100%",
-    position: "absolute",
-    bottom: 0,
-    paddingHorizontal: 5,
-  },
-  settingButton: {
-    padding: 5,
-  },
+
+  // plus: {
+  //   position: "absolute",
+  //   bottom: 3,
+  //   right: 3,
+  //   height: "100%",
+  // },
 });

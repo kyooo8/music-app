@@ -1,14 +1,19 @@
-import { StyleSheet, TouchableOpacity, View, FlatList } from "react-native";
-import { ThemedText } from "@/components/ThemedText";
-import { router } from "expo-router";
-import { Colors } from "@/constants/Colors";
+import { Text, StyleSheet, TouchableOpacity } from "react-native";
 import { useEffect, useState } from "react";
 import { collection, onSnapshot, orderBy, query } from "firebase/firestore";
+import { router } from "expo-router";
+
 import { auth, db } from "@/firebase/firebaseConfig";
-import { ProjecctListItem } from "@/components/ProjectListItem";
+import { ProjectListItem } from "@/components/ProjectListItem";
 import { Project } from "@/types/project";
+import ParallaxScrollView from "@/components/ParallaxScrollView";
+import { ThemedView } from "@/components/ThemedView";
+import { useThemeColor } from "@/hooks/useThemeColor";
 
 export default function ListPage() {
+  const tint = useThemeColor({}, "tint");
+  const text = useThemeColor({}, "text");
+
   const [projects, setprojects] = useState<Project[]>([]);
 
   useEffect(() => {
@@ -34,36 +39,28 @@ export default function ListPage() {
     return unsubscribe;
   }, []);
   return (
-    <View style={styles.container}>
-      <View style={styles.listContainer}>
-        <FlatList
-          data={projects}
-          renderItem={({ item }) => <ProjecctListItem project={item} />}
-        />
-        <TouchableOpacity
-          style={styles.createBtn}
-          onPress={() => router.replace("/(tabs)/chord")}
-        >
-          <ThemedText type="title">+</ThemedText>
-        </TouchableOpacity>
-      </View>
-    </View>
+    <ThemedView style={styles.container}>
+      <ParallaxScrollView>
+        {projects.map((project) => (
+          <ProjectListItem key={project.id} project={project} />
+        ))}
+      </ParallaxScrollView>
+
+      <TouchableOpacity
+        style={[styles.createBtn, { backgroundColor: tint }]}
+        onPress={() => router.replace("/(tabs)/chord")}
+      >
+        <Text style={[styles.createText, { color: text }]}>+</Text>
+      </TouchableOpacity>
+    </ThemedView>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
-    backgroundColor: Colors.dark.background,
     flex: 1,
-  },
-  listContainer: {
-    marginTop: 30,
-    flex: 1,
-    width: "80%",
-    marginInline: "auto",
   },
   createBtn: {
-    backgroundColor: Colors.dark.tint,
     width: 65,
     height: 65,
     justifyContent: "center",
@@ -72,5 +69,14 @@ const styles = StyleSheet.create({
     position: "absolute",
     right: 40,
     bottom: 40,
+    shadowColor: "#000000",
+    shadowOpacity: 0.25,
+    shadowRadius: 8,
+    shadowOffset: { width: 0, height: 8 },
+    elevation: 8,
+  },
+  createText: {
+    fontSize: 40,
+    lineHeight: 44,
   },
 });

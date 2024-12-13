@@ -1,27 +1,15 @@
-import {
-  TouchableOpacity,
-  Text,
-  StyleSheet,
-  Modal,
-  Pressable,
-  Button,
-  TextInput,
-  View,
-} from "react-native";
+import { TouchableOpacity, Text, StyleSheet, Alert } from "react-native";
 import { addDoc, collection, doc, setDoc, Timestamp } from "firebase/firestore";
 import { auth, db } from "@/firebase/firebaseConfig";
 import { router } from "expo-router";
-import { useContext, useState } from "react";
-import { ChordContext } from "@/MusicContext";
-import { ThemedText } from "./ThemedText";
+import { useContext } from "react";
+import { MusicContext } from "@/MusicContext";
 
 export const SaveButton = () => {
   const {
     id,
     title,
-    setTitle,
     description,
-    setDescription,
     root,
     bpm,
     scaleType,
@@ -29,9 +17,7 @@ export const SaveButton = () => {
     melody,
     bass,
     dram,
-  } = useContext(ChordContext);
-
-  const [modalVisible, setModalVisible] = useState(false);
+  } = useContext(MusicContext);
 
   // console.log("root", root);
   // console.log("bpm", bpm);
@@ -41,7 +27,7 @@ export const SaveButton = () => {
   // console.log("bass", bass);
   // console.log("dram", dram);
 
-  const handlePress = async (title: string, description: string) => {
+  const handlePress = async () => {
     if (id) {
       const ref = doc(db, `users/${auth.currentUser?.uid}/projects`, id);
       await setDoc(ref, {
@@ -58,107 +44,89 @@ export const SaveButton = () => {
       }).catch((e) => {
         console.log("save error", e);
       });
+      router.replace("/");
     } else {
-      await addDoc(collection(db, `users/${auth.currentUser?.uid}/projects`), {
-        title,
-        description,
-        root,
-        bpm,
-        scaleType,
-        chordProgression,
-        melody,
-        bass,
-        dram,
-        updatedAt: Timestamp.fromDate(new Date()),
-      }).catch((error) => {
-        console.log("add error", error);
-      });
+      // First prompt for title
+      Alert.prompt(
+        "保存",
+        "タイトルを入力してください",
+        [
+          {
+            text: "キャンセル",
+            style: "cancel",
+          },
+          {
+            text: "次へ",
+            style: "destructive",
+            onPress: async (titleInput: string | undefined) => {
+              if (titleInput?.trim() === "") {
+                titleInput = "新規プロジェクト";
+              }
+
+              Alert.prompt(
+                "保存",
+                "説明を入力してください",
+                [
+                  {
+                    text: "キャンセル",
+                    style: "cancel",
+                  },
+                  {
+                    text: "保存する",
+                    style: "destructive",
+                    onPress: async (descriptionInput: string | undefined) => {
+                      try {
+                        const ref = await addDoc(
+                          collection(
+                            db,
+                            `users/${auth.currentUser?.uid}/projects`
+                          ),
+                          {
+                            title: titleInput,
+                            description: descriptionInput,
+                            root,
+                            bpm,
+                            scaleType,
+                            chordProgression,
+                            melody,
+                            bass,
+                            dram,
+                            updatedAt: Timestamp.fromDate(new Date()),
+                          }
+                        );
+                        console.log("Document written with ID: ", ref.id);
+                        router.replace("/");
+                      } catch (error) {
+                        console.log("Error adding document: ", error);
+                        Alert.alert("保存に失敗しました");
+                      }
+                    },
+                  },
+                ],
+                "plain-text", // Input type
+                "" // Placeholder text for description
+              );
+            },
+          },
+        ],
+        "plain-text", // Input type
+        "" // Placeholder text for title
+      );
     }
-
-    router.replace("/");
-  };
-
-  const openModal = () => {
-    setModalVisible(true);
-  };
-
-  const closeModal = () => {
-    setModalVisible(false);
   };
 
   return (
-    <TouchableOpacity onPress={openModal}>
+    <TouchableOpacity onPress={handlePress}>
       <Text style={styles.text}>保存</Text>
-      <Modal
-        visible={modalVisible}
-        transparent={true}
-        animationType="fade"
-        onRequestClose={closeModal}
-      >
-        <Pressable style={styles.modalBackground} onPress={closeModal}>
-          <View style={styles.modalContainer}>
-            <TextInput
-              style={styles.textInput}
-              value={title}
-              onChangeText={(text) => {
-                setTitle(text);
-              }}
-              autoCapitalize="none"
-              placeholder="プロジェクト名"
-            />
-            <TextInput
-              style={styles.textInput}
-              value={description}
-              onChangeText={(text) => {
-                setDescription(text);
-              }}
-              autoCapitalize="none"
-              placeholder="説明"
-            />
-            <Button
-              title="保存"
-              onPress={() => {
-                handlePress(title, description);
-              }}
-            />
-          </View>
-          <TouchableOpacity style={styles.closeButton} onPress={closeModal}>
-            <ThemedText>Close Modal</ThemedText>
-          </TouchableOpacity>
-        </Pressable>
-      </Modal>
     </TouchableOpacity>
   );
 };
 
 const styles = StyleSheet.create({
   text: {
-    fontSize: 12,
-    lineHeight: 24,
+    fontSize: 16,
+    lineHeight: 22,
     color: "rgba(255,255,255,0.7)",
-  },
-  modalBackground: {
-    flex: 1,
-    backgroundColor: "rgba(0,0,0,0.5)", // 半透明な背景
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  modalContainer: {
-    backgroundColor: "#333",
-    padding: 20,
-    borderRadius: 8,
-    alignItems: "center",
-    width: "80%",
-  },
-  textInput: {
-    backgroundColor: "#ffffff",
-    padding: 5,
-    margin: 4,
-  },
-  closeButton: {
-    backgroundColor: "#5B9CC0",
-    padding: 10,
-    borderRadius: 5,
-    marginTop: 20,
+    marginRight: 8,
   },
 });

@@ -7,20 +7,17 @@ import { useFonts } from "expo-font";
 import { Stack } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
 import { useEffect } from "react";
-import { StatusBar } from "expo-status-bar";
+import "react-native-get-random-values";
 
 import { useColorScheme } from "@/hooks/useColorScheme";
-import { Colors } from "@/constants/Colors";
-
-import "react-native-get-random-values";
+import { useThemeColor } from "@/hooks/useThemeColor";
 import { LogOutButton } from "@/components/LogOutButton";
 
-// Prevent the splash screen from auto-hiding before asset loading is complete.
 SplashScreen.preventAutoHideAsync();
 
 export default function RootLayout() {
-  const tab = Colors.dark.tab;
-  const text = Colors.dark.text;
+  const tab = useThemeColor({}, "tab");
+  const text = useThemeColor({}, "text");
   const colorScheme = useColorScheme();
   const [loaded] = useFonts({
     SpaceMono: require("../assets/fonts/SpaceMono-Regular.ttf"),
@@ -38,7 +35,6 @@ export default function RootLayout() {
 
   return (
     <ThemeProvider value={colorScheme === "dark" ? DarkTheme : DefaultTheme}>
-      <StatusBar style="light" />
       <Stack
         screenOptions={{
           title: "",
@@ -52,6 +48,7 @@ export default function RootLayout() {
         }}
       >
         <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+        <Stack.Screen name="(auth)" options={{ headerShown: false }} />
         <Stack.Screen
           name="list"
           options={{

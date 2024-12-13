@@ -21,7 +21,7 @@ export type ChordProgressionData = {
   [index: number]: ChordItem;
 } | null;
 
-export interface ChordContextType {
+export interface MusicContextType {
   id: string;
   title: string;
   setTitle: React.Dispatch<React.SetStateAction<string>>;
@@ -34,6 +34,8 @@ export interface ChordContextType {
   setBpm: React.Dispatch<React.SetStateAction<number>>;
   scaleType: ScaleType;
   setScaleType: React.Dispatch<React.SetStateAction<ScaleType>>;
+  isEnabled: boolean;
+  setIsEnabled: React.Dispatch<React.SetStateAction<boolean>>;
   scaleNotes: string[];
   setScaleNotes: React.Dispatch<React.SetStateAction<string[]>>;
   chordProgression: ChordProgressionData;

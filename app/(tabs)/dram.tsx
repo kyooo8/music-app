@@ -1,64 +1,62 @@
-// DramPage.tsx
-import { useEffect, useRef, useContext } from "react";
+import React, {
+  useEffect,
+  useRef,
+  useContext,
+  useMemo,
+  useCallback,
+} from "react";
 import { ScrollView, View, StyleSheet } from "react-native";
-import { ChordContext } from "../../MusicContext";
+import { MusicContext } from "../../MusicContext";
 import { ThemedText } from "@/components/ThemedText";
-import { Colors } from "@/constants/Colors";
-import { DramParts } from "@/components/DramParts";
-import { PlayBtn } from "@/components/PlayBtn";
-import { Bpm } from "@/components/Bpm";
-import { ToggleButton } from "@/components/ToggleBtn";
+import { ThemedView } from "@/components/ThemedView";
+import { HeaderBottom } from "@/components/HeaderBottom";
 import {
   cellheight,
   cellmargin,
   cellWidth,
   lastItemMargin,
 } from "@/constants/Style";
+import { useThemeColor } from "@/hooks/useThemeColor";
+import { DramData } from "@/types/music";
+import DramParts from "@/components/DramParts";
 
-export default function DramPage() {
+const dramNotes = [
+  "f-hihat",
+  "ハイタム",
+  "ロータム",
+  "clash",
+  "ライド",
+  "o-hihat",
+  "c-hihat",
+  "スネア",
+  "バス",
+  "手拍子",
+];
+
+const DramPage = () => {
+  const tab = useThemeColor({}, "tab");
   const { chordProgression, scaleNotes, dram, setDram } =
-    useContext(ChordContext);
-
-  const bg = Colors.dark.background;
-  const tab = Colors.dark.tab;
-  const dramNotes = [
-    "Fハイハット",
-    "タムタム",
-    "フロアタム",
-    "クラッシュ",
-    "ライド",
-    "Oハイハット",
-    "Cハイハット",
-    "スネア",
-    "バス",
-    "ハンドクラップ",
-  ];
+    useContext(MusicContext);
 
   const verticalScrollRef = useRef<ScrollView>(null);
-  const horizontalScrllRef = useRef<ScrollView>(null);
+  const horizontalScrollRef = useRef<ScrollView>(null);
 
+  // ドラムの初期化
   useEffect(() => {
     if (!chordProgression) return;
     const measureCount = Object.keys(chordProgression).length;
     const currentDramCount = dram ? Object.keys(dram).length : 0;
 
     if (currentDramCount !== measureCount) {
-      // dram初期化: measureCount×10楽器×16ステップすべてfalse
-      const newDram: {
-        [measure: number]: {
-          [instrument: number]: {
-            [step: number]: boolean;
-          };
-        };
-      } = {};
+      const newDram: DramData = {};
 
       for (let m = 0; m < measureCount; m++) {
         const measureObj: {
           [instrument: number]: { [step: number]: boolean };
         } = {};
-        for (let i = 0; i < 10; i++) {
+        for (let i = 0; i < dramNotes.length; i++) {
           const instrumentObj: { [step: number]: boolean } = {};
-          for (let s = 0; s < 16; s++) {
+          for (let s = 0; s < 8; s++) {
             instrumentObj[s] = false;
           }
           measureObj[i] = instrumentObj;
@@ -68,47 +66,34 @@ export default function DramPage() {
 
       setDram(newDram);
     }
-  }, [chordProgression, dram, setDram]);
+  }, []);
 
-  const chordEntries = chordProgression
-    ? (
-        Object.entries(chordProgression) as [
-          string,
-          { chord: number; shape: string }
-        ][]
+  // chordEntries をメモ化
+  const chordEntries = useMemo(() => {
+    if (!chordProgression) return [];
+    return Object.entries(chordProgression)
+      .map(
+        ([k, v]) => [Number(k), v] as [number, { chord: number; shape: string }]
       )
-        .map(
-          ([k, v]) =>
-            [Number(k), v] as [number, { chord: number; shape: string }]
-        )
-        .sort((a, b) => a[0] - b[0])
-    : [];
+      .sort((a, b) => a[0] - b[0]);
+  }, [chordProgression]);
 
   return (
-    <View style={[styles.container, { backgroundColor: bg }]}>
-      <View style={styles.settingContainer}>
-        <PlayBtn />
-        <View style={{ position: "absolute", right: 10 }}>
-          <Bpm />
-          <ToggleButton />
-        </View>
-      </View>
+    <ThemedView style={styles.container}>
+      <HeaderBottom />
       {chordProgression && chordEntries.length > 0 ? (
         <>
           {/* コード進行の表示 */}
           <View style={styles.chordRow}>
-            <View style={{ width: 44.3 }}></View>
+            <View style={styles.chordSpacer} />
             <ScrollView
               horizontal
               showsHorizontalScrollIndicator={false}
-              ref={horizontalScrllRef}
+              ref={horizontalScrollRef}
               scrollEventThrottle={16}
             >
               {chordEntries.map(([index, chordItem]) => (
-                <View
-                  key={index}
-                  style={[styles.chordCell, { backgroundColor: tab }]}
-                >
+                <View key={index} style={styles.chordCell}>
                   <ThemedText>{scaleNotes[chordItem.chord] || ""}</ThemedText>
                 </View>
               ))}
@@ -123,10 +108,7 @@ export default function DramPage() {
               contentContainerStyle={styles.noteLabelContent}
             >
               {dramNotes.map((note, noteIndex) => (
-                <View
-                  key={noteIndex}
-                  style={[styles.noteLabel, { backgroundColor: tab }]}
-                >
+                <View key={noteIndex} style={styles.noteLabel}>
                   <ThemedText>{note}</ThemedText>
                 </View>
               ))}
@@ -135,24 +117,24 @@ export default function DramPage() {
             <ScrollView
               horizontal
               showsHorizontalScrollIndicator={false}
-              onScroll={(event) => {
+              onScroll={useCallback((event: any) => {
                 const offsetX = event.nativeEvent.contentOffset.x;
-                horizontalScrllRef.current?.scrollTo({
+                horizontalScrollRef.current?.scrollTo({
                   x: offsetX,
                   animated: false,
                 });
-              }}
+              }, [])}
               scrollEventThrottle={16}
             >
               <ScrollView
                 showsVerticalScrollIndicator={false}
-                onScroll={(event) => {
+                onScroll={useCallback((event: any) => {
                   const offsetY = event.nativeEvent.contentOffset.y;
                   verticalScrollRef.current?.scrollTo({
                     y: offsetY,
                     animated: false,
                   });
-                }}
+                }, [])}
                 scrollEventThrottle={16}
               >
                 {dramNotes.map((note, noteIndex) => (
@@ -163,7 +145,6 @@ export default function DramPage() {
                         note={note}
                         chordIndex={thisChordIndex}
                         noteIndex={noteIndex}
-                        dramNotes={dramNotes}
                       />
                     ))}
                   </View>
@@ -177,9 +158,9 @@ export default function DramPage() {
           <ThemedText>コード進行を選択してください。</ThemedText>
         </View>
       )}
-    </View>
+    </ThemedView>
   );
-}
+};
 
 const styles = StyleSheet.create({
   container: {
@@ -190,8 +171,11 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     marginTop: 30,
   },
+  chordSpacer: {
+    width: 44.3,
+  },
   chordCell: {
-    width: cellWidth * 4 + cellmargin * 6,
+    width: (cellWidth * 2 + cellmargin * 6) * 2,
     marginRight: lastItemMargin + cellmargin,
     marginLeft: cellmargin,
     height: "100%",
@@ -203,7 +187,7 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   noteLabelContainer: {
-    width: 50,
+    width: 90,
   },
   noteLabelContent: {},
   noteLabel: {
@@ -221,9 +205,6 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
   },
-  settingContainer: {
-    position: "relative",
-    width: "100%",
-    marginTop: 16,
-  },
 });
+
+export default DramPage;

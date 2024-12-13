@@ -1,11 +1,12 @@
 import { useEffect, useState, useContext } from "react";
 import { View, TextInput, StyleSheet, Keyboard } from "react-native";
+
 import { ThemedText } from "./ThemedText";
-import { ChordContext } from "@/MusicContext";
+import { MusicContext } from "@/MusicContext";
 import { Colors } from "@/constants/Colors";
 
 export const Bpm = () => {
-  const { bpm, setBpm } = useContext(ChordContext);
+  const { bpm, setBpm } = useContext(MusicContext);
   const textColor = Colors.dark.text;
 
   const [tempValue, setTempValue] = useState(String(bpm));

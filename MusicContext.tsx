@@ -5,14 +5,14 @@ import { Project } from "./types/project";
 import { auth, db } from "@/firebase/firebaseConfig";
 import { doc, onSnapshot } from "firebase/firestore";
 import {
-  ChordContextType,
+  MusicContextType,
   ScaleType,
   ChordProgressionData,
   MelobassData,
   DramData,
 } from "./types/music";
 
-const defaultChordContext: ChordContextType = {
+const defaultMusicContext: MusicContextType = {
   id: "",
   title: "新規プロジェクト",
   setTitle: () => {},
@@ -24,6 +24,8 @@ const defaultChordContext: ChordContextType = {
   bpm: 100,
   setBpm: () => {},
   scaleType: "メジャー",
+  isEnabled: false,
+  setIsEnabled: () => {},
   setScaleType: () => {},
   scaleNotes: [],
   setScaleNotes: () => {},
@@ -38,8 +40,8 @@ const defaultChordContext: ChordContextType = {
   setDram: () => {},
 };
 
-export const ChordContext =
-  createContext<ChordContextType>(defaultChordContext);
+export const MusicContext =
+  createContext<MusicContextType>(defaultMusicContext);
 
 export const ChordProvider = ({ children }: { children: React.ReactNode }) => {
   const { id }: { id: string } = useLocalSearchParams();
@@ -50,6 +52,7 @@ export const ChordProvider = ({ children }: { children: React.ReactNode }) => {
   const [root, setRoot] = useState<string | null>(null);
   const [bpm, setBpm] = useState(100);
   const [scaleType, setScaleType] = useState<ScaleType>("メジャー");
+  const [isEnabled, setIsEnabled] = useState(false);
   const [scaleNotes, setScaleNotes] = useState<string[]>([]);
   const [chordProgression, setChordProgression] =
     useState<ChordProgressionData>(null);
@@ -144,7 +147,7 @@ export const ChordProvider = ({ children }: { children: React.ReactNode }) => {
     const rootIndex = notes.indexOf(root);
     const sortNotes = [...notes.slice(rootIndex), ...notes.slice(0, rootIndex)];
     const calculatedNotes = [
-      ...sortNotes.slice(8, 11),
+      ...sortNotes.slice(9, 12),
       ...sortNotes,
       ...sortNotes.slice(0, 3),
     ].map((note, index) => ({ name: note, index }));
@@ -157,10 +160,10 @@ export const ChordProvider = ({ children }: { children: React.ReactNode }) => {
 
       return calculatedNotes;
     });
-  }, [root, notes]);
+  }, [root]);
 
   return (
-    <ChordContext.Provider
+    <MusicContext.Provider
       value={{
         id,
         title,
@@ -174,6 +177,8 @@ export const ChordProvider = ({ children }: { children: React.ReactNode }) => {
         setBpm,
         scaleType,
         setScaleType,
+        isEnabled,
+        setIsEnabled,
         scaleNotes,
         setScaleNotes,
         chordProgression,
@@ -188,6 +193,6 @@ export const ChordProvider = ({ children }: { children: React.ReactNode }) => {
       }}
     >
       {children}
-    </ChordContext.Provider>
+    </MusicContext.Provider>
   );
 };

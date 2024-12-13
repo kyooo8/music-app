@@ -1,24 +1,22 @@
-// melody.tsx
-import { useContext, useEffect, useRef } from "react";
+import React, { useContext, useEffect, useMemo, useRef } from "react";
 import { ScrollView, View, StyleSheet } from "react-native";
-import { ChordContext } from "../../MusicContext";
+
+import { MusicContext } from "../../MusicContext";
 import { ThemedText } from "@/components/ThemedText";
-import { Colors } from "@/constants/Colors";
 import { MelodyParts } from "@/components/MelodyParts";
-import { PlayBtn } from "@/components/PlayBtn";
-import { Bpm } from "@/components/Bpm";
-import { ToggleButton } from "@/components/ToggleBtn";
+import { HeaderBottom } from "@/components/HeaderBottom";
 import {
   cellheight,
   cellmargin,
   cellWidth,
   lastItemMargin,
 } from "@/constants/Style";
+import { MelobassData } from "@/types/music";
+import { ThemedView } from "@/components/ThemedView";
 
-const MelodyInputScreen = () => {
-  const bg = Colors.dark.background;
+export default function MelodyPage() {
   const { chordProgression, melody, setMelody, scaleNotes, sortedMelodyNotes } =
-    useContext(ChordContext);
+    useContext(MusicContext);
 
   const verticalScrollRef = useRef<ScrollView>(null);
   const horizontalScrllRef = useRef<ScrollView>(null);
@@ -30,11 +28,7 @@ const MelodyInputScreen = () => {
 
     if (currentMelodyCount !== measureCount) {
       // melody再初期化
-      const newMelody: {
-        [measure: number]: {
-          [beat: number]: { relativePos: number; duration: string } | null;
-        };
-      } = {};
+      const newMelody: MelobassData = {};
 
       for (let m = 0; m < measureCount; m++) {
         const measureObj: { [beat: number]: null } = {};
@@ -58,14 +52,8 @@ const MelodyInputScreen = () => {
     : [];
 
   return (
-    <View style={[styles.container, { backgroundColor: bg }]}>
-      <View style={styles.settingContainer}>
-        <PlayBtn />
-        <View style={{ position: "absolute", right: 10 }}>
-          <Bpm />
-          <ToggleButton />
-        </View>
-      </View>
+    <ThemedView style={styles.container}>
+      <HeaderBottom />
       {chordProgression && chordEntries.length > 0 ? (
         <>
           {/* コード進行の表示 */}
@@ -143,11 +131,9 @@ const MelodyInputScreen = () => {
           <ThemedText>コード進行を選択してください。</ThemedText>
         </View>
       )}
-    </View>
+    </ThemedView>
   );
-};
-
-export default MelodyInputScreen;
+}
 
 const styles = StyleSheet.create({
   container: {
@@ -191,10 +177,5 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
-  },
-  settingContainer: {
-    position: "relative",
-    width: "100%",
-    marginTop: 16,
   },
 });

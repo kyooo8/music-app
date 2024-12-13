@@ -1,24 +1,22 @@
-// Bass.tsx
-import { useContext, useEffect, useRef } from "react";
+import React, { useContext, useEffect, useMemo, useRef } from "react";
 import { ScrollView, View, StyleSheet } from "react-native";
-import { ChordContext } from "../../MusicContext";
-import { ThemedText } from "@/components/ThemedText";
-import { Colors } from "@/constants/Colors";
-import { BassParts } from "@/components/BassParts";
-import { PlayBtn } from "@/components/PlayBtn";
-import { Bpm } from "@/components/Bpm";
-import { ToggleButton } from "@/components/ToggleBtn";
+
 import {
   cellheight,
   cellmargin,
   cellWidth,
   lastItemMargin,
 } from "@/constants/Style";
+import { MelobassData } from "@/types/music";
+import { MusicContext } from "@/MusicContext";
+import { ThemedText } from "@/components/ThemedText";
+import { BassParts } from "@/components/BassParts";
+import { HeaderBottom } from "@/components/HeaderBottom";
+import { ThemedView } from "@/components/ThemedView";
 
-const BassInputScreen = () => {
-  const bg = Colors.dark.background;
+export default function BassPage() {
   const { chordProgression, bass, setBass, scaleNotes, sortedMelodyNotes } =
-    useContext(ChordContext);
+    useContext(MusicContext);
 
   const verticalScrollRef = useRef<ScrollView>(null);
   const horizontalScrllRef = useRef<ScrollView>(null);
@@ -29,11 +27,7 @@ const BassInputScreen = () => {
     const currentBassCount = bass ? Object.keys(bass).length : 0;
 
     if (currentBassCount !== measureCount) {
-      const newBass: {
-        [measure: number]: {
-          [beat: number]: { relativePos: number; duration: string } | null;
-        };
-      } = {};
+      const newBass: MelobassData = {};
 
       for (let m = 0; m < measureCount; m++) {
         const measureObj: { [beat: number]: null } = {};
@@ -62,14 +56,8 @@ const BassInputScreen = () => {
     : [];
 
   return (
-    <View style={[styles.container, { backgroundColor: bg }]}>
-      <View style={styles.settingContainer}>
-        <PlayBtn />
-        <View style={{ position: "absolute", right: 10 }}>
-          <Bpm />
-          <ToggleButton />
-        </View>
-      </View>
+    <ThemedView style={[styles.container]}>
+      <HeaderBottom />
       {chordProgression && chordEntries.length > 0 ? (
         <>
           {/* コード進行の表示 */}
@@ -147,11 +135,9 @@ const BassInputScreen = () => {
           <ThemedText>コード進行を選択してください。</ThemedText>
         </View>
       )}
-    </View>
+    </ThemedView>
   );
-};
-
-export default BassInputScreen;
+}
 
 const styles = StyleSheet.create({
   container: {
@@ -195,10 +181,5 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
-  },
-  settingContainer: {
-    position: "relative",
-    width: "100%",
-    marginTop: 16,
   },
 });

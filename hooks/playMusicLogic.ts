@@ -65,13 +65,13 @@ interface MusicData {
 }
 
 const dramInstruments = [
-  "F-hihat",
+  "hand-clap",
   "tamtam",
   "floor-tom",
   "crash",
   "ride",
-  "o-hihat",
-  "c-hihat",
+  "open-hihat",
+  "closed-hihat",
   "snare",
   "bass-drum",
   "pedal-hihat",
@@ -93,14 +93,17 @@ function getOctaveAdjustedNote(
 ): string {
   // 12半音で1オクターブ上がると仮定
   // メロディはbaseMelodyOctave=3スタート、ベースはbaseBassOctave=2スタートと例示
-  const baseMelodyOctave = 3;
-  const baseBassOctave = 1;
+  const baseMelodyOctave = 2;
+  const baseBassOctave = 0;
   const baseOctave = isBass ? baseBassOctave : baseMelodyOctave;
 
   // relativePosが0のときをbaseOctave+Cとするなら、rootや開始音によって調整が必要
   // とりあえずrelativePos=0がbaseOctaveのCと仮定し、AやA#などの場合も一貫して同じ扱いにするには
   // relativePosに応じてオクターブを計算
   // 例えばrelativePos=0でbaseOctave内、relativePos=12で+1オクターブ
+  relativePos += 9;
+  console.log(baseOctave, noteName, relativePos);
+
   const octave = baseOctave + Math.floor(relativePos / 12);
   return `${octave}${noteName}`; // "3A#", "2C"など
 }

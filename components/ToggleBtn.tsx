@@ -1,10 +1,10 @@
-import { useState, useContext } from "react";
-import { ChordContext } from "@/MusicContext";
+import { useState, useContext, useEffect } from "react";
+import { MusicContext } from "@/MusicContext";
 import { Text, TouchableOpacity, StyleSheet, Animated } from "react-native";
 
 export const ToggleButton = () => {
-  const { scaleType, setScaleType } = useContext(ChordContext);
-  const [isEnabled, setIsEnabled] = useState(false);
+  const { scaleType, setScaleType, isEnabled, setIsEnabled } =
+    useContext(MusicContext);
   const togglePosition = useState(new Animated.Value(0))[0];
 
   const toggleSwitch = () => {
