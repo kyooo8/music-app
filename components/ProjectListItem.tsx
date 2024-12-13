@@ -5,12 +5,14 @@ import { ThemedText } from "./ThemedText";
 import { Project } from "@/types/project";
 import { deleteDoc, doc } from "firebase/firestore";
 import { auth, db } from "@/firebase/firebaseConfig";
+import { useThemeColor } from "@/hooks/useThemeColor";
 
 interface Props {
   project: Project;
 }
 
 export const ProjectListItem = (props: Props) => {
+  const border = useThemeColor({}, "text");
   const { project } = props;
   const { updatedAt } = project;
   if (updatedAt === null) {
@@ -71,7 +73,7 @@ export const ProjectListItem = (props: Props) => {
           </View>
         </TouchableOpacity>
       </Link>
-      <View style={styles.bar}></View>
+      <View style={[styles.bar, { borderBottomColor: border }]}></View>
     </>
   );
 };
@@ -89,7 +91,6 @@ const styles = StyleSheet.create({
   },
   bar: {
     borderBottomWidth: 1,
-    borderBottomColor: "#fff",
     marginTop: 4,
     marginBottom: 12,
   },
