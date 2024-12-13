@@ -1,14 +1,16 @@
 import { Tabs } from "expo-router";
-import { Colors } from "@/constants/Colors";
-import { ChordContext } from "@/MusicContext";
+
 import { Icon } from "@/components/Icon";
+import { MusicContext, ChordProvider } from "@/MusicContext";
+import { useThemeColor } from "@/hooks/useThemeColor";
 import { ThemedText } from "@/components/ThemedText";
-import { ChordProvider } from "@/MusicContext";
 import { SaveButton } from "@/components/SaveButton";
 
 export default function TabLayout() {
-  const tint = Colors.dark.tint;
-  const tab = Colors.dark.tab;
+  const tint = useThemeColor({}, "tint");
+  const bg = useThemeColor({}, "background");
+  const tab = useThemeColor({}, "tab");
+  const text = useThemeColor({}, "text");
   return (
     <ChordProvider>
       <Tabs
@@ -21,7 +23,9 @@ export default function TabLayout() {
             borderTopWidth: 0,
             borderTopColor: "transparent",
           },
-          headerStyle: { backgroundColor: tab },
+          headerStyle: { backgroundColor: bg },
+          headerTitleStyle: { color: text },
+          headerTitleAlign: "left",
           headerRight: () => <SaveButton />,
         }}
       >
@@ -30,9 +34,9 @@ export default function TabLayout() {
           options={{
             title: "コード",
             tabBarIcon: ({ color, focused }) => (
-              <ChordContext.Consumer>
+              <MusicContext.Consumer>
                 {(context) => {
-                  const { root, scaleType } = context; // ChordContextからrootとscaleTypeを取得
+                  const { root, scaleType } = context; // MusicContextからrootとscaleTypeを取得
 
                   // mが表示される場合にフォントサイズを調整
                   const fontSize =
@@ -58,29 +62,21 @@ export default function TabLayout() {
                     </ThemedText>
                   );
                 }}
-              </ChordContext.Consumer>
+              </MusicContext.Consumer>
             ),
           }}
         />
 
         <Tabs.Screen
-          name="melody"
+          name="melobass"
           options={{
-            title: "メロディー",
+            title: "メロディー・ベース",
             tabBarIcon: ({ color, focused }) => (
               <Icon name={"melody"} size={28} color={focused ? tint : color} />
             ),
           }}
         />
-        <Tabs.Screen
-          name="bass"
-          options={{
-            title: "ベース",
-            tabBarIcon: ({ color, focused }) => (
-              <Icon name={"bass"} size={28} color={focused ? tint : color} />
-            ),
-          }}
-        />
+
         <Tabs.Screen
           name="dram"
           options={{

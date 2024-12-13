@@ -19,6 +19,7 @@ export const Colors = {
     circle: "#333333",
     circleText: "#ffffff",
     ChordProgression: "#ffffff",
+    melody: "#C05B5B",
   },
   dark: {
     tab: "#202020",
@@ -31,5 +32,6 @@ export const Colors = {
     circle: "#f0f0f0",
     circleText: "#000000",
     ChordProgression: "#191919",
+    melody: "#C05B5B",
   },
 };

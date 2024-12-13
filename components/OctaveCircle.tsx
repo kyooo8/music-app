@@ -7,21 +7,13 @@ import {
   TouchableOpacity,
 } from "react-native";
 import { useRef, useEffect, useContext } from "react";
-import { ChordContext } from "@/MusicContext";
-import { Colors } from "@/constants/Colors";
-import { ChordItem } from "@/types/music";
+import { MusicContext } from "@/MusicContext";
+import { useThemeColor } from "@/hooks/useThemeColor";
 
 export const OctaveCircle = () => {
-  const {
-    notes,
-    scaleNotes,
-    scaleType,
-    setRoot,
-    root,
-    chordProgression,
-    setChordProgression,
-  } = useContext(ChordContext);
-  const circleTextColor = Colors.dark.circleText;
+  const { notes, scaleNotes, setRoot, root, setChordProgression } =
+    useContext(MusicContext);
+  const circleTextColor = useThemeColor({}, "circleText");
 
   const lastTap = useRef<number | null>(null);
   const rotation = useRef(new Animated.Value(0)).current;

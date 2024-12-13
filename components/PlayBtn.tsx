@@ -3,12 +3,13 @@ import { TouchableOpacity, View, StyleSheet, Text } from "react-native";
 import { Icon } from "./Icon";
 import { useMusicPlayer } from "@/hooks/useMusicPlayer";
 import { Colors } from "@/constants/Colors";
+import { useThemeColor } from "@/hooks/useThemeColor";
 
 export const PlayBtn = () => {
   const { playing, play, stop } = useMusicPlayer();
-  const bg = Colors.dark.circle;
+  const bg = useThemeColor({}, "text");
   return (
-    <View>
+    <View style={styles.play}>
       {playing ? (
         <TouchableOpacity onPress={stop}>
           <Icon name="stop" size={48} color={bg} />
@@ -22,4 +23,10 @@ export const PlayBtn = () => {
   );
 };
 
-const styles = StyleSheet.create({});
+const styles = StyleSheet.create({
+  play: {
+    marginRight: "auto",
+    width: 55,
+    height: 55,
+  },
+});

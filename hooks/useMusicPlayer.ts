@@ -1,6 +1,6 @@
 // useMusicPlayer.ts
 import { useContext, useState, useRef } from "react";
-import { ChordContext } from "@/MusicContext";
+import { MusicContext } from "@/MusicContext";
 import { playMusic } from "./playMusicLogic";
 
 export function useMusicPlayer() {
@@ -14,7 +14,7 @@ export function useMusicPlayer() {
     bass,
     dram,
     sortedMelodyNotes,
-  } = useContext(ChordContext);
+  } = useContext(MusicContext);
 
   const [playing, setPlaying] = useState(false);
   const shouldContinueRef = useRef(false); // 再生中フラグをrefで管理
@@ -34,7 +34,7 @@ export function useMusicPlayer() {
           root,
           bpm,
           scaleType,
-          scaleNotes: scaleNotes, // ChordContext から取得したものを渡す
+          scaleNotes: scaleNotes, // MusicContext から取得したものを渡す
           chordProgression,
           melody,
           bass,

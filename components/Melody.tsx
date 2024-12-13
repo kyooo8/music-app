@@ -1,41 +1,50 @@
-// melody.tsx
-import { useContext, useEffect, useRef } from "react";
+// MelodyPage.tsx
+import React, { useContext, useEffect, useMemo, useRef } from "react";
 import { ScrollView, View, StyleSheet } from "react-native";
-import { ChordContext } from "../../MusicContext";
+
+import { MusicContext } from "@/MusicContext";
 import { ThemedText } from "@/components/ThemedText";
-import { Colors } from "@/constants/Colors";
 import { MelodyParts } from "@/components/MelodyParts";
-import { PlayBtn } from "@/components/PlayBtn";
-import { Bpm } from "@/components/Bpm";
-import { ToggleButton } from "@/components/ToggleBtn";
 import {
   cellheight,
   cellmargin,
   cellWidth,
   lastItemMargin,
 } from "@/constants/Style";
+import { MelobassData } from "@/types/music";
+import { ThemedView } from "@/components/ThemedView";
+import { useThemeColor } from "@/hooks/useThemeColor";
 
-const MelodyInputScreen = () => {
-  const bg = Colors.dark.background;
-  const { chordProgression, melody, setMelody, scaleNotes, sortedMelodyNotes } =
-    useContext(ChordContext);
+interface Props {
+  chordEntries: [
+    number,
+    {
+      chord: number;
+      shape: string;
+    }
+  ][];
+}
+
+export default function MelodyPage({ chordEntries }: Props) {
+  const {
+    root,
+    chordProgression,
+    scaleNotes,
+    sortedMelodyNotes,
+    melody,
+    setMelody,
+  } = useContext(MusicContext);
+  const tint = useThemeColor({}, "tint");
 
   const verticalScrollRef = useRef<ScrollView>(null);
-  const horizontalScrllRef = useRef<ScrollView>(null);
+  const horizontalScrollRef = useRef<ScrollView>(null);
 
+  // メロディーの初期化
   useEffect(() => {
-    if (!chordProgression) return;
-    const measureCount = Object.keys(chordProgression).length;
-    const currentMelodyCount = melody ? Object.keys(melody).length : 0;
+    if (!melody && chordProgression) {
+      const measureCount = Object.keys(chordProgression).length;
 
-    if (currentMelodyCount !== measureCount) {
-      // melody再初期化
-      const newMelody: {
-        [measure: number]: {
-          [beat: number]: { relativePos: number; duration: string } | null;
-        };
-      } = {};
-
+      const newMelody: MelobassData = {};
       for (let m = 0; m < measureCount; m++) {
         const measureObj: { [beat: number]: null } = {};
         for (let b = 0; b < 4; b++) {
@@ -43,29 +52,12 @@ const MelodyInputScreen = () => {
         }
         newMelody[m] = measureObj;
       }
-
       setMelody(newMelody);
     }
-  }, [chordProgression, melody, setMelody]);
-
-  const chordEntries = chordProgression
-    ? Object.entries(chordProgression)
-        .map(
-          ([k, v]) =>
-            [Number(k), v] as [number, { chord: number; shape: string }]
-        )
-        .sort((a, b) => a[0] - b[0])
-    : [];
+  }, [chordProgression, setMelody, melody]);
 
   return (
-    <View style={[styles.container, { backgroundColor: bg }]}>
-      <View style={styles.settingContainer}>
-        <PlayBtn />
-        <View style={{ position: "absolute", right: 10 }}>
-          <Bpm />
-          <ToggleButton />
-        </View>
-      </View>
+    <ThemedView style={styles.container}>
       {chordProgression && chordEntries.length > 0 ? (
         <>
           {/* コード進行の表示 */}
@@ -74,7 +66,7 @@ const MelodyInputScreen = () => {
             <ScrollView
               horizontal
               showsHorizontalScrollIndicator={false}
-              ref={horizontalScrllRef}
+              ref={horizontalScrollRef}
               scrollEventThrottle={16}
             >
               {chordEntries.map(([index, chordItem]) => (
@@ -93,8 +85,10 @@ const MelodyInputScreen = () => {
               contentContainerStyle={styles.noteLabelContent}
             >
               {[...sortedMelodyNotes].reverse().map((note, noteIndex) => (
-                <View key={noteIndex} style={styles.noteLabel}>
-                  <ThemedText>{note.name}</ThemedText>
+                <View key={noteIndex} style={[styles.noteLabel]}>
+                  <ThemedText style={root === note.name && { color: tint }}>
+                    {note.name}
+                  </ThemedText>
                 </View>
               ))}
             </ScrollView>
@@ -104,7 +98,7 @@ const MelodyInputScreen = () => {
               showsHorizontalScrollIndicator={false}
               onScroll={(event) => {
                 const offsetX = event.nativeEvent.contentOffset.x;
-                horizontalScrllRef.current?.scrollTo({
+                horizontalScrollRef.current?.scrollTo({
                   x: offsetX,
                   animated: false,
                 });
@@ -143,11 +137,9 @@ const MelodyInputScreen = () => {
           <ThemedText>コード進行を選択してください。</ThemedText>
         </View>
       )}
-    </View>
+    </ThemedView>
   );
-};
-
-export default MelodyInputScreen;
+}
 
 const styles = StyleSheet.create({
   container: {
@@ -156,7 +148,6 @@ const styles = StyleSheet.create({
   chordRow: {
     height: "10%",
     flexDirection: "row",
-    marginTop: 30,
   },
   chordCell: {
     width: cellWidth * 4 + cellmargin * 6,
@@ -191,10 +182,5 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
-  },
-  settingContainer: {
-    position: "relative",
-    width: "100%",
-    marginTop: 16,
   },
 });

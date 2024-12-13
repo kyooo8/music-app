@@ -1,12 +1,15 @@
 import { useEffect, useState, useContext } from "react";
 import { View, TextInput, StyleSheet, Keyboard } from "react-native";
+
 import { ThemedText } from "./ThemedText";
-import { ChordContext } from "@/MusicContext";
+import { MusicContext } from "@/MusicContext";
 import { Colors } from "@/constants/Colors";
+import { useTheme } from "@react-navigation/native";
+import { useThemeColor } from "@/hooks/useThemeColor";
 
 export const Bpm = () => {
-  const { bpm, setBpm } = useContext(ChordContext);
-  const textColor = Colors.dark.text;
+  const { bpm, setBpm } = useContext(MusicContext);
+  const textColor = useThemeColor({}, "text");
 
   const [tempValue, setTempValue] = useState(String(bpm));
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
@@ -33,7 +36,7 @@ export const Bpm = () => {
 
   return (
     <View style={styles.input}>
-      <ThemedText type="small">BPM : </ThemedText>
+      <ThemedText type="small">BPM: </ThemedText>
       <TextInput
         keyboardType="numeric"
         returnKeyType="done"

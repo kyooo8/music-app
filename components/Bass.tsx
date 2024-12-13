@@ -1,75 +1,61 @@
-// Bass.tsx
-import { useContext, useEffect, useRef } from "react";
+import React, { useContext, useEffect, useMemo, useRef } from "react";
 import { ScrollView, View, StyleSheet } from "react-native";
-import { ChordContext } from "../../MusicContext";
-import { ThemedText } from "@/components/ThemedText";
-import { Colors } from "@/constants/Colors";
-import { BassParts } from "@/components/BassParts";
-import { PlayBtn } from "@/components/PlayBtn";
-import { Bpm } from "@/components/Bpm";
-import { ToggleButton } from "@/components/ToggleBtn";
+
 import {
   cellheight,
   cellmargin,
   cellWidth,
   lastItemMargin,
 } from "@/constants/Style";
+import { MelobassData } from "@/types/music";
+import { MusicContext } from "@/MusicContext";
+import { ThemedText } from "@/components/ThemedText";
+import { BassParts } from "@/components/BassParts";
+import { ThemedView } from "@/components/ThemedView";
+import { useThemeColor } from "@/hooks/useThemeColor";
 
-const BassInputScreen = () => {
-  const bg = Colors.dark.background;
-  const { chordProgression, bass, setBass, scaleNotes, sortedMelodyNotes } =
-    useContext(ChordContext);
+interface Props {
+  chordEntries: [
+    number,
+    {
+      chord: number;
+      shape: string;
+    }
+  ][];
+}
+
+export default function BassPage({ chordEntries }: Props) {
+  const {
+    root,
+    chordProgression,
+    bass,
+    setBass,
+    scaleNotes,
+    sortedMelodyNotes,
+  } = useContext(MusicContext);
+
+  const tint = useThemeColor({}, "tint");
 
   const verticalScrollRef = useRef<ScrollView>(null);
   const horizontalScrllRef = useRef<ScrollView>(null);
 
   useEffect(() => {
-    if (!chordProgression) return;
-    const measureCount = Object.keys(chordProgression).length;
-    const currentBassCount = bass ? Object.keys(bass).length : 0;
-
-    if (currentBassCount !== measureCount) {
-      const newBass: {
-        [measure: number]: {
-          [beat: number]: { relativePos: number; duration: string } | null;
-        };
-      } = {};
-
+    if (!bass && chordProgression) {
+      const measureCount = Object.keys(chordProgression).length;
+      const newMelody: MelobassData = {};
       for (let m = 0; m < measureCount; m++) {
         const measureObj: { [beat: number]: null } = {};
         for (let b = 0; b < 4; b++) {
           measureObj[b] = null;
         }
-        newBass[m] = measureObj;
+        newMelody[m] = measureObj;
       }
-
-      setBass(newBass);
+      setBass(newMelody);
     }
-  }, [chordProgression, bass, setBass]);
-
-  const chordEntries = chordProgression
-    ? (
-        Object.entries(chordProgression) as [
-          string,
-          { chord: number; shape: string }
-        ][]
-      )
-        .map(
-          ([k, v]) =>
-            [Number(k), v] as [number, { chord: number; shape: string }]
-        )
-        .sort((a, b) => a[0] - b[0])
-    : [];
+  }, [chordProgression, setBass, bass]);
 
   return (
-    <View style={[styles.container, { backgroundColor: bg }]}>
-      <View style={styles.settingContainer}>
-        <PlayBtn />
-        <View style={{ position: "absolute", right: 10 }}>
-          <Bpm />
-          <ToggleButton />
-        </View>
-      </View>
+    <ThemedView style={[styles.container]}>
       {chordProgression && chordEntries.length > 0 ? (
         <>
           {/* コード進行の表示 */}
@@ -98,7 +84,9 @@ const BassInputScreen = () => {
             >
               {[...sortedMelodyNotes].reverse().map((note, noteIndex) => (
                 <View key={noteIndex} style={styles.noteLabel}>
-                  <ThemedText>{note.name}</ThemedText>
+                  <ThemedText style={root === note.name && { color: tint }}>
+                    {note.name}
+                  </ThemedText>
                 </View>
               ))}
             </ScrollView>
@@ -147,11 +135,9 @@ const BassInputScreen = () => {
           <ThemedText>コード進行を選択してください。</ThemedText>
         </View>
       )}
-    </View>
+    </ThemedView>
   );
-};
-
-export default BassInputScreen;
+}
 
 const styles = StyleSheet.create({
   container: {
@@ -160,7 +146,6 @@ const styles = StyleSheet.create({
   chordRow: {
     height: "10%",
     flexDirection: "row",
-    marginTop: 30,
   },
   chordCell: {
     width: cellWidth * 4 + cellmargin * 6,
@@ -195,10 +180,5 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
-  },
-  settingContainer: {
-    position: "relative",
-    width: "100%",
-    marginTop: 16,
   },
 });
