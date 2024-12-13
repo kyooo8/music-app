@@ -11,53 +11,51 @@ import { MelobassData } from "@/types/music";
 import { MusicContext } from "@/MusicContext";
 import { ThemedText } from "@/components/ThemedText";
 import { BassParts } from "@/components/BassParts";
-import { HeaderBottom } from "@/components/HeaderBottom";
 import { ThemedView } from "@/components/ThemedView";
+import { useThemeColor } from "@/hooks/useThemeColor";
 
-export default function BassPage() {
-  const { chordProgression, bass, setBass, scaleNotes, sortedMelodyNotes } =
-    useContext(MusicContext);
+interface Props {
+  chordEntries: [
+    number,
+    {
+      chord: number;
+      shape: string;
+    }
+  ][];
+}
+
+export default function BassPage({ chordEntries }: Props) {
+  const {
+    root,
+    chordProgression,
+    bass,
+    setBass,
+    scaleNotes,
+    sortedMelodyNotes,
+  } = useContext(MusicContext);
+
+  const tint = useThemeColor({}, "tint");
 
   const verticalScrollRef = useRef<ScrollView>(null);
   const horizontalScrllRef = useRef<ScrollView>(null);
 
   useEffect(() => {
-    if (!chordProgression) return;
-    const measureCount = Object.keys(chordProgression).length;
-    const currentBassCount = bass ? Object.keys(bass).length : 0;
-
-    if (currentBassCount !== measureCount) {
-      const newBass: MelobassData = {};
-
+    if (!bass && chordProgression) {
+      const measureCount = Object.keys(chordProgression).length;
+      const newMelody: MelobassData = {};
       for (let m = 0; m < measureCount; m++) {
         const measureObj: { [beat: number]: null } = {};
         for (let b = 0; b < 4; b++) {
           measureObj[b] = null;
         }
-        newBass[m] = measureObj;
+        newMelody[m] = measureObj;
       }
-
-      setBass(newBass);
+      setBass(newMelody);
     }
-  }, [chordProgression, bass, setBass]);
-
-  const chordEntries = chordProgression
-    ? (
-        Object.entries(chordProgression) as [
-          string,
-          { chord: number; shape: string }
-        ][]
-      )
-        .map(
-          ([k, v]) =>
-            [Number(k), v] as [number, { chord: number; shape: string }]
-        )
-        .sort((a, b) => a[0] - b[0])
-    : [];
+  }, [chordProgression, setBass, bass]);
 
   return (
     <ThemedView style={[styles.container]}>
-      <HeaderBottom />
       {chordProgression && chordEntries.length > 0 ? (
         <>
           {/* コード進行の表示 */}
@@ -86,7 +84,9 @@ export default function BassPage() {
             >
               {[...sortedMelodyNotes].reverse().map((note, noteIndex) => (
                 <View key={noteIndex} style={styles.noteLabel}>
-                  <ThemedText>{note.name}</ThemedText>
+                  <ThemedText style={root === note.name && { color: tint }}>
+                    {note.name}
+                  </ThemedText>
                 </View>
               ))}
             </ScrollView>
@@ -146,7 +146,6 @@ const styles = StyleSheet.create({
   chordRow: {
     height: "10%",
     flexDirection: "row",
-    marginTop: 30,
   },
   chordCell: {
     width: cellWidth * 4 + cellmargin * 6,

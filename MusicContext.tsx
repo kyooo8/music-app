@@ -147,9 +147,9 @@ export const ChordProvider = ({ children }: { children: React.ReactNode }) => {
     const rootIndex = notes.indexOf(root);
     const sortNotes = [...notes.slice(rootIndex), ...notes.slice(0, rootIndex)];
     const calculatedNotes = [
-      ...sortNotes.slice(9, 12),
+      ...sortNotes.slice(10, 12),
       ...sortNotes,
-      ...sortNotes.slice(0, 3),
+      ...sortNotes.slice(0, 2),
     ].map((note, index) => ({ name: note, index }));
 
     setSortedMelodyNotes((prev) => {

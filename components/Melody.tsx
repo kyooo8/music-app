@@ -1,10 +1,10 @@
+// MelodyPage.tsx
 import React, { useContext, useEffect, useMemo, useRef } from "react";
 import { ScrollView, View, StyleSheet } from "react-native";
 
-import { MusicContext } from "../../MusicContext";
+import { MusicContext } from "@/MusicContext";
 import { ThemedText } from "@/components/ThemedText";
 import { MelodyParts } from "@/components/MelodyParts";
-import { HeaderBottom } from "@/components/HeaderBottom";
 import {
   cellheight,
   cellmargin,
@@ -13,23 +13,38 @@ import {
 } from "@/constants/Style";
 import { MelobassData } from "@/types/music";
 import { ThemedView } from "@/components/ThemedView";
+import { useThemeColor } from "@/hooks/useThemeColor";
 
-export default function MelodyPage() {
-  const { chordProgression, melody, setMelody, scaleNotes, sortedMelodyNotes } =
-    useContext(MusicContext);
+interface Props {
+  chordEntries: [
+    number,
+    {
+      chord: number;
+      shape: string;
+    }
+  ][];
+}
+
+export default function MelodyPage({ chordEntries }: Props) {
+  const {
+    root,
+    chordProgression,
+    scaleNotes,
+    sortedMelodyNotes,
+    melody,
+    setMelody,
+  } = useContext(MusicContext);
+  const tint = useThemeColor({}, "tint");
 
   const verticalScrollRef = useRef<ScrollView>(null);
-  const horizontalScrllRef = useRef<ScrollView>(null);
+  const horizontalScrollRef = useRef<ScrollView>(null);
 
+  // メロディーの初期化
   useEffect(() => {
-    if (!chordProgression) return;
-    const measureCount = Object.keys(chordProgression).length;
-    const currentMelodyCount = melody ? Object.keys(melody).length : 0;
+    if (!melody && chordProgression) {
+      const measureCount = Object.keys(chordProgression).length;
 
-    if (currentMelodyCount !== measureCount) {
-      // melody再初期化
       const newMelody: MelobassData = {};
-
       for (let m = 0; m < measureCount; m++) {
         const measureObj: { [beat: number]: null } = {};
         for (let b = 0; b < 4; b++) {
@@ -37,23 +52,12 @@ export default function MelodyPage() {
         }
         newMelody[m] = measureObj;
       }
-
       setMelody(newMelody);
     }
-  }, [melody, setMelody]);
-
-  const chordEntries = chordProgression
-    ? Object.entries(chordProgression)
-        .map(
-          ([k, v]) =>
-            [Number(k), v] as [number, { chord: number; shape: string }]
-        )
-        .sort((a, b) => a[0] - b[0])
-    : [];
+  }, [chordProgression, setMelody, melody]);
 
   return (
     <ThemedView style={styles.container}>
-      <HeaderBottom />
       {chordProgression && chordEntries.length > 0 ? (
         <>
           {/* コード進行の表示 */}
@@ -62,7 +66,7 @@ export default function MelodyPage() {
             <ScrollView
               horizontal
               showsHorizontalScrollIndicator={false}
-              ref={horizontalScrllRef}
+              ref={horizontalScrollRef}
               scrollEventThrottle={16}
             >
               {chordEntries.map(([index, chordItem]) => (
@@ -81,8 +85,10 @@ export default function MelodyPage() {
               contentContainerStyle={styles.noteLabelContent}
             >
               {[...sortedMelodyNotes].reverse().map((note, noteIndex) => (
-                <View key={noteIndex} style={styles.noteLabel}>
-                  <ThemedText>{note.name}</ThemedText>
+                <View key={noteIndex} style={[styles.noteLabel]}>
+                  <ThemedText style={root === note.name && { color: tint }}>
+                    {note.name}
+                  </ThemedText>
                 </View>
               ))}
             </ScrollView>
@@ -92,7 +98,7 @@ export default function MelodyPage() {
               showsHorizontalScrollIndicator={false}
               onScroll={(event) => {
                 const offsetX = event.nativeEvent.contentOffset.x;
-                horizontalScrllRef.current?.scrollTo({
+                horizontalScrollRef.current?.scrollTo({
                   x: offsetX,
                   animated: false,
                 });
@@ -142,7 +148,6 @@ const styles = StyleSheet.create({
   chordRow: {
     height: "10%",
     flexDirection: "row",
-    marginTop: 30,
   },
   chordCell: {
     width: cellWidth * 4 + cellmargin * 6,

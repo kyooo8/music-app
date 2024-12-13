@@ -14,6 +14,7 @@ interface ChordDisplayItem {
 
 export const ChordProgression = () => {
   const tab = useThemeColor({}, "tab");
+  const card = useThemeColor({}, "tabIconDefault");
 
   const { scaleNotes, chordProgression, setChordProgression } =
     useContext(MusicContext);
@@ -75,7 +76,7 @@ export const ChordProgression = () => {
 
       return (
         <TouchableOpacity
-          style={[styles.chordCard, { backgroundColor: "#bbbb" }]}
+          style={[styles.chordCard, { backgroundColor: card }]}
           onLongPress={() => handleLongPress(item.index)}
           activeOpacity={0.8}
           onPress={() => {
@@ -116,19 +117,24 @@ export const ChordProgression = () => {
 const styles = StyleSheet.create({
   chordProgressionContainer: {
     width: "100%",
+    height: "100%",
     maxWidth: 350,
-    marginTop: 30,
+    maxHeight: 200,
+    marginTop: 40,
+    marginBottom: 30,
     padding: 20,
     borderRadius: 8,
   },
   flatList: {
-    marginTop: 10,
+    marginTop: 24,
   },
   chordCard: {
-    marginRight: 10,
+    marginRight: 16,
     padding: 20,
     width: 60,
+    height: 80,
     borderRadius: 8,
     alignItems: "center",
+    justifyContent: "center",
   },
 });

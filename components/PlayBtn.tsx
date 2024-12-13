@@ -24,7 +24,7 @@ export const PlayBtn = () => {
 
 const styles = StyleSheet.create({
   play: {
-    marginLeft: "auto",
+    marginRight: "auto",
     width: 55,
     height: 55,
   },

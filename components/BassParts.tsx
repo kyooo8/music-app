@@ -1,4 +1,4 @@
-import React, { useContext } from "react";
+import React, { useCallback, useContext } from "react";
 import { View, StyleSheet, TouchableOpacity } from "react-native";
 
 import { MusicContext } from "@/MusicContext";
@@ -21,24 +21,27 @@ export const BassParts = React.memo(
   ({ note, chordIndex, chordItem }: Props) => {
     const tab = useThemeColor({}, "tab");
     const tint = useThemeColor({}, "tint");
-    const { bass, setBass, scaleNotes } = useContext(MusicContext);
+    const { bass, setBass, scaleNotes, melody } = useContext(MusicContext);
 
-    const handleNoteInput = (measure: number, beat: number) => {
-      setBass((prev) => {
-        const oldBass = prev || {};
-        const measureObj = oldBass[measure] || {};
-        const currentNote = measureObj[beat];
-        const isSelected =
-          currentNote && currentNote.relativePos === note.index;
+    const handleNoteInput = useCallback(
+      (measure: number, beat: number) => {
+        setBass((prev) => {
+          const oldBass = prev || {};
+          const measureObj = oldBass[measure] || {};
+          const currentNote = measureObj[beat];
+          const isSelected =
+            currentNote && currentNote.relativePos === note.index;
 
-        const newNote = isSelected
-          ? null
-          : { relativePos: note.index, duration: "quarter" };
+          const newNote = isSelected
+            ? null
+            : { relativePos: note.index, duration: "quarter" };
 
-        const updatedMeasure = { ...measureObj, [beat]: newNote };
-        return { ...oldBass, [measure]: updatedMeasure } as MelobassData;
-      });
-    };
+          const updatedMeasure = { ...measureObj, [beat]: newNote };
+          return { ...oldBass, [measure]: updatedMeasure } as MelobassData;
+        });
+      },
+      [setBass, note.index]
+    );
 
     const getDisplay = (chord: number) => {
       if (scaleNotes[chord] === note.name) return "ルート";
@@ -59,18 +62,26 @@ export const BassParts = React.memo(
           .map((_, beat) => {
             const cellKey = `${note.name}-${chordIndex}-${beat}`;
             const currentNote = bass?.[chordIndex]?.[beat];
+            const currentMelodyNote = melody?.[chordIndex]?.[beat];
             const isSelected =
               currentNote && currentNote.relativePos === note.index;
+            const isMelodySelected =
+              currentMelodyNote && currentMelodyNote.relativePos == note.index;
             return (
               <TouchableOpacity
                 key={cellKey}
                 style={[
-                  { backgroundColor: isSelected ? tint : tab },
+                  {
+                    backgroundColor: isSelected ? tint : tab,
+                  },
                   styles.gridCell,
                 ]}
                 onPress={() => handleNoteInput(chordIndex, beat)}
               >
-                <ThemedText>{getDisplay(chordItem.chord)}</ThemedText>
+                {isMelodySelected && <View style={styles.overlay}></View>}
+                <ThemedText type="small">
+                  {getDisplay(chordItem.chord)}
+                </ThemedText>
               </TouchableOpacity>
             );
           })}
@@ -92,5 +103,14 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     margin: cellmargin,
     borderRadius: 4,
+  },
+  overlay: {
+    position: "absolute",
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    borderRadius: 4,
+    backgroundColor: "rgba(192, 91, 91, 0.2)",
   },
 });

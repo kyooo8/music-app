@@ -25,6 +25,7 @@ export default function TabLayout() {
           },
           headerStyle: { backgroundColor: bg },
           headerTitleStyle: { color: text },
+          headerTitleAlign: "left",
           headerRight: () => <SaveButton />,
         }}
       >
@@ -67,23 +68,15 @@ export default function TabLayout() {
         />
 
         <Tabs.Screen
-          name="melody"
+          name="melobass"
           options={{
-            title: "メロディー",
+            title: "メロディー・ベース",
             tabBarIcon: ({ color, focused }) => (
               <Icon name={"melody"} size={28} color={focused ? tint : color} />
             ),
           }}
         />
-        <Tabs.Screen
-          name="bass"
-          options={{
-            title: "ベース",
-            tabBarIcon: ({ color, focused }) => (
-              <Icon name={"bass"} size={28} color={focused ? tint : color} />
-            ),
-          }}
-        />
+
         <Tabs.Screen
           name="dram"
           options={{
