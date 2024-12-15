@@ -1,20 +1,52 @@
 import { useState, useContext } from "react";
 import { MusicContext } from "@/MusicContext";
 import { Text, TouchableOpacity, StyleSheet, Animated } from "react-native";
+import { ChordProgressionData } from "@/types/music";
 
 export const ToggleButton = () => {
-  const { scaleType, setScaleType, isEnabled, setIsEnabled } =
-    useContext(MusicContext);
-  const togglePosition = useState(new Animated.Value(0))[0];
+  const {
+    root,
+    scaleNotes,
+    scaleType,
+    setScaleType,
+    isEnabled,
+    setIsEnabled,
+    chordProgression,
+    setChordProgression,
+  } = useContext(MusicContext);
+
+  const togglePosition = useState(new Animated.Value(isEnabled ? 1 : 0))[0];
 
   const toggleSwitch = () => {
-    setIsEnabled((prev) => !prev);
-    isEnabled ? setScaleType("メジャー") : setScaleType("マイナー");
+    const newIsEnabled = !isEnabled;
+    setIsEnabled(newIsEnabled);
+    setScaleType(newIsEnabled ? "マイナー" : "メジャー"); // トグル後の状態に基づいて設定
+
     Animated.timing(togglePosition, {
-      toValue: isEnabled ? 0 : 1,
+      toValue: newIsEnabled ? 1 : 0,
       duration: 200,
       useNativeDriver: false,
     }).start();
+
+    if (chordProgression && root) {
+      // 新しい chordProgression オブジェクトを作成
+      const updatedChordProgression: ChordProgressionData = {
+        ...chordProgression,
+      };
+
+      Object.keys(updatedChordProgression).forEach((key) => {
+        const chord = updatedChordProgression[parseInt(key)];
+        // root と一致するコードの shape を更新
+        if (scaleNotes[chord.chord] === root) {
+          updatedChordProgression[parseInt(key)] = {
+            ...chord,
+            shape: newIsEnabled ? "m" : "major",
+          };
+        }
+      });
+
+      setChordProgression(updatedChordProgression);
+    }
   };
 
   return (
@@ -35,7 +67,7 @@ export const ToggleButton = () => {
                 {
                   translateX: togglePosition.interpolate({
                     inputRange: [0, 1],
-                    outputRange: [0, 54],
+                    outputRange: [2, 54], // 左端から右端への移動
                   }),
                 },
               ],
@@ -79,8 +111,7 @@ const styles = StyleSheet.create({
     borderRadius: 13,
     backgroundColor: "#ffffff",
     position: "absolute",
-    left: 2,
-    top: 1,
+    top: 2,
   },
   text: {
     position: "absolute",

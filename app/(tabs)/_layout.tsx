@@ -23,7 +23,7 @@ export default function TabLayout() {
             borderTopWidth: 0,
             borderTopColor: "transparent",
           },
-          headerStyle: { backgroundColor: bg },
+          headerStyle: { backgroundColor: tab },
           headerTitleStyle: { color: text },
           headerTitleAlign: "left",
           headerRight: () => <SaveButton />,

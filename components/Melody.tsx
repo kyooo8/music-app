@@ -72,6 +72,7 @@ export default function MelodyPage({ chordEntries }: Props) {
               {chordEntries.map(([index, chordItem]) => (
                 <View key={index} style={styles.chordCell}>
                   <ThemedText>{scaleNotes[chordItem.chord] || ""}</ThemedText>
+                  <ThemedText>{chordItem.shape}</ThemedText>
                 </View>
               ))}
             </ScrollView>

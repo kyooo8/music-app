@@ -2,14 +2,14 @@ import { useThemeColor } from "@/hooks/useThemeColor";
 import { Tabs } from "expo-router";
 
 export default function TabLayout() {
-  const bg = useThemeColor({}, "background");
+  const tab = useThemeColor({}, "tab");
   const text = useThemeColor({}, "text");
   return (
     <Tabs
       screenOptions={{
         tabBarStyle: { display: "none" },
         headerShown: true,
-        headerStyle: { backgroundColor: bg },
+        headerStyle: { backgroundColor: tab },
       }}
     >
       <Tabs.Screen

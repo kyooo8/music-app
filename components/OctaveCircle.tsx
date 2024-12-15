@@ -72,7 +72,7 @@ export const OctaveCircle = () => {
       setChordProgression((prev) => {
         if (!prev) {
           // prevがnullなら新たにオブジェクトを作成
-          return { 0: { chord: chordIndex, shape: "maj7" } };
+          return { 0: { chord: chordIndex, shape: "major" } };
         }
 
         // Object.entriesでエントリを取得し、numberキーとChordItemであることを明示

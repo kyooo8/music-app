@@ -5,16 +5,18 @@ import { ThemedText } from "@/components/ThemedText";
 import { Icon } from "./Icon";
 import { v4 as uuidv4 } from "uuid";
 import { useThemeColor } from "@/hooks/useThemeColor";
+import { ChordItem } from "@/types/music";
 
 interface ChordDisplayItem {
   id: string;
   index: number;
   chordIndex: number;
+  shape: string;
 }
 
 export const ChordProgression = () => {
   const tab = useThemeColor({}, "tab");
-  const card = useThemeColor({}, "icon");
+  const icon = useThemeColor({}, "icon");
 
   const { scaleNotes, chordProgression, setChordProgression } =
     useContext(MusicContext);
@@ -31,6 +33,7 @@ export const ChordProgression = () => {
       id: uuidv4(),
       index: Number(k),
       chordIndex: v.chord,
+      shape: v.shape,
     }));
     setData(entries);
     setShowPlusIndices([]);
@@ -51,10 +54,7 @@ export const ChordProgression = () => {
       setChordProgression((prev) => {
         if (!prev) return prev;
         const entries = Object.entries(prev)
-          .map(
-            ([k, v]) =>
-              [Number(k), v] as [number, { chord: number; shape: string }]
-          )
+          .map(([k, v]) => [Number(k), v] as [number, ChordItem])
           .sort((a, b) => a[0] - b[0]);
 
         const pos = entries.findIndex(([i]) => i === index);
@@ -76,19 +76,24 @@ export const ChordProgression = () => {
 
       return (
         <TouchableOpacity
-          style={[styles.chordCard, { backgroundColor: card }]}
+          style={[styles.chordCard, { backgroundColor: icon }]}
           onLongPress={() => handleLongPress(item.index)}
           activeOpacity={0.8}
           onPress={() => {
             isShowPlus && deleteChord(item.index);
           }}
         >
-          <ThemedText type="title">
+          <ThemedText type="small">
             {scaleNotes ? (
               isShowPlus ? (
                 <Icon name="bin2" size={15} color="red" />
               ) : (
-                scaleNotes[item.chordIndex]
+                <>
+                  <ThemedText>{scaleNotes[item.chordIndex]}</ThemedText>
+                  <ThemedText>
+                    {item.shape === "major" ? "" : item.shape}
+                  </ThemedText>
+                </>
               )
             ) : (
               ""
@@ -131,7 +136,7 @@ const styles = StyleSheet.create({
   chordCard: {
     marginRight: 16,
     padding: 20,
-    width: 60,
+    width: 160,
     height: 80,
     borderRadius: 8,
     alignItems: "center",
