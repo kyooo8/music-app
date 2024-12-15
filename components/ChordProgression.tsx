@@ -1,32 +1,46 @@
 import React, { useEffect, useState, useCallback, useContext } from "react";
-import { StyleSheet, View, TouchableOpacity, FlatList } from "react-native";
+import {
+  StyleSheet,
+  View,
+  TouchableOpacity,
+  FlatList,
+  Modal,
+  Text,
+  Alert,
+} from "react-native";
 import { MusicContext } from "@/MusicContext";
 import { ThemedText } from "@/components/ThemedText";
 import { Icon } from "./Icon";
 import { v4 as uuidv4 } from "uuid";
 import { useThemeColor } from "@/hooks/useThemeColor";
-import { ChordItem } from "@/types/music";
+import { ChordItem, ChordShape } from "@/types/music";
 
 interface ChordDisplayItem {
   id: string;
   index: number;
   chordIndex: number;
-  shape: string;
+  shape: ChordShape;
 }
 
 export const ChordProgression = () => {
   const tab = useThemeColor({}, "tab");
-  const icon = useThemeColor({}, "icon");
+  const chordCard = useThemeColor({}, "chordCard");
+  const tint = useThemeColor({}, "tint");
+  const text = useThemeColor({}, "text");
 
-  const { scaleNotes, chordProgression, setChordProgression } =
+  const { root, scaleNotes, chordProgression, setChordProgression } =
     useContext(MusicContext);
-  const [showPlusIndices, setShowPlusIndices] = useState<number[]>([]);
   const [data, setData] = useState<ChordDisplayItem[]>([]);
+  const [selectedChordIndex, setSelectedChordIndex] = useState<number | null>(
+    null
+  );
+
+  // モーダル表示の状態管理
+  const [isModalVisible, setModalVisible] = useState(false);
 
   useEffect(() => {
     if (!chordProgression) {
       setData([]);
-      setShowPlusIndices([]);
       return;
     }
     const entries = Object.entries(chordProgression).map(([k, v]) => ({
@@ -36,73 +50,59 @@ export const ChordProgression = () => {
       shape: v.shape,
     }));
     setData(entries);
-    setShowPlusIndices([]);
-  }, [chordProgression, scaleNotes]);
+  }, [chordProgression]);
 
   const handleLongPress = useCallback((index: number) => {
-    setShowPlusIndices((prev) => {
-      if (prev.includes(index)) {
-        return prev.filter((i) => i !== index);
-      } else {
-        return [...prev, index];
-      }
-    });
+    setSelectedChordIndex(index);
+    setModalVisible(true); // モーダルを表示
   }, []);
 
-  const deleteChord = useCallback(
-    (index: number) => {
+  const updateChordShape = useCallback(
+    (shape: ChordShape) => {
+      if (selectedChordIndex === null) return;
+      // chordIndexを使用してルート判定
+      const currentChord = data.find(
+        (item) => item.index === selectedChordIndex
+      );
+      if (currentChord && scaleNotes[currentChord.chordIndex] === root) {
+        setModalVisible(false); // モーダルを閉じる
+        Alert.alert("ルート音は変更できません");
+        return;
+      }
       setChordProgression((prev) => {
         if (!prev) return prev;
-        const entries = Object.entries(prev)
-          .map(([k, v]) => [Number(k), v] as [number, ChordItem])
-          .sort((a, b) => a[0] - b[0]);
-
-        const pos = entries.findIndex(([i]) => i === index);
-        if (pos === -1) return prev;
-        entries.splice(pos, 1);
-        entries.forEach((e, i) => {
-          e[0] = i;
-        });
-        return Object.fromEntries(entries.map(([i, v]) => [i, v]));
+        const updated = { ...prev };
+        updated[selectedChordIndex] = {
+          ...updated[selectedChordIndex],
+          shape,
+        };
+        return updated;
       });
-      setData((prev) => prev.filter((item) => item.index !== index));
+
+      setModalVisible(false); // モーダルを閉じる
     },
-    [setChordProgression]
+    [selectedChordIndex, setChordProgression]
   );
 
   const renderItem = useCallback(
-    ({ item }: { item: ChordDisplayItem }) => {
-      const isShowPlus = showPlusIndices.includes(item.index);
-
-      return (
-        <TouchableOpacity
-          style={[styles.chordCard, { backgroundColor: icon }]}
-          onLongPress={() => handleLongPress(item.index)}
-          activeOpacity={0.8}
-          onPress={() => {
-            isShowPlus && deleteChord(item.index);
-          }}
-        >
-          <ThemedText type="small">
-            {scaleNotes ? (
-              isShowPlus ? (
-                <Icon name="bin2" size={15} color="red" />
-              ) : (
-                <>
-                  <ThemedText>{scaleNotes[item.chordIndex]}</ThemedText>
-                  <ThemedText>
-                    {item.shape === "major" ? "" : item.shape}
-                  </ThemedText>
-                </>
-              )
-            ) : (
-              ""
-            )}
-          </ThemedText>
-        </TouchableOpacity>
-      );
-    },
-    [showPlusIndices, handleLongPress, deleteChord, scaleNotes]
+    ({ item }: { item: ChordDisplayItem }) => (
+      <TouchableOpacity
+        style={[styles.chordCard, { backgroundColor: chordCard }]}
+        onLongPress={() => handleLongPress(item.index)}
+      >
+        <ThemedText type="small">
+          {scaleNotes && (
+            <>
+              <ThemedText>{scaleNotes[item.chordIndex]}</ThemedText>
+              <ThemedText>
+                {item.shape === "major" ? "" : item.shape}
+              </ThemedText>
+            </>
+          )}
+        </ThemedText>
+      </TouchableOpacity>
+    ),
+    [handleLongPress, scaleNotes, chordCard]
   );
 
   return (
@@ -115,6 +115,37 @@ export const ChordProgression = () => {
         keyExtractor={(item) => item.id}
         style={styles.flatList}
       />
+
+      {/* 型変更用のモーダル */}
+      <Modal
+        visible={isModalVisible}
+        transparent={true}
+        animationType="slide"
+        onRequestClose={() => setModalVisible(false)}
+      >
+        <View style={styles.modalContainer}>
+          <View style={[styles.modal, { backgroundColor: tab }]}>
+            <ThemedText type="subtitle">型を選択してください</ThemedText>
+            {(["major", "7", "add9", "m", "M7", "susu4"] as ChordShape[]).map(
+              (shape) => (
+                <TouchableOpacity
+                  key={shape}
+                  style={[styles.modalButton, { borderColor: text }]}
+                  onPress={() => updateChordShape(shape)}
+                >
+                  <ThemedText>{shape}</ThemedText>
+                </TouchableOpacity>
+              )
+            )}
+            <TouchableOpacity
+              style={[styles.modalCloseButton, { backgroundColor: tint }]}
+              onPress={() => setModalVisible(false)}
+            >
+              <ThemedText>閉じる</ThemedText>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
     </View>
   );
 };
@@ -141,5 +172,32 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     alignItems: "center",
     justifyContent: "center",
+  },
+  modalContainer: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: "rgba(0, 0, 0, 0.5)",
+  },
+  modal: {
+    padding: 20,
+    borderRadius: 8,
+    width: "80%",
+    alignItems: "center",
+  },
+  modalButton: {
+    padding: 10,
+    marginVertical: 5,
+    borderRadius: 5,
+    width: "100%",
+    alignItems: "center",
+    borderWidth: 1,
+  },
+  modalCloseButton: {
+    marginTop: 20,
+    padding: 10,
+    borderRadius: 5,
+    width: "100%",
+    alignItems: "center",
   },
 });

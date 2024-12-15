@@ -1,6 +1,6 @@
 export type ScaleType = "メジャー" | "マイナー";
 type NoteDuration = "whole" | "half" | "quarter" | "eighth" | "sixteenth";
-type ChordShape = "major" | "7" | "add9" | "m" | "M7" | "susu4";
+export type ChordShape = "major" | "7" | "add9" | "m" | "M7" | "susu4";
 export type NoteData = { relativePos: number; duration: NoteDuration } | null;
 export type MelobassData = {
   [measure: number]: {
