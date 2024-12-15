@@ -1,10 +1,11 @@
 import { Tabs } from "expo-router";
-
+import React from "react";
 import { Icon } from "@/components/Icon";
 import { MusicContext, ChordProvider } from "@/MusicContext";
 import { useThemeColor } from "@/hooks/useThemeColor";
 import { ThemedText } from "@/components/ThemedText";
 import { SaveButton } from "@/components/SaveButton";
+import { TouchableOpacity } from "react-native";
 
 export default function TabLayout() {
   const tint = useThemeColor({}, "tint");
@@ -47,19 +48,26 @@ export default function TabLayout() {
                       : 20;
 
                   return (
-                    <ThemedText
-                      style={{
-                        fontWeight: "bold",
-                        color: focused ? tint : color,
-                        fontSize, // フォントサイズを変更
-                      }}
-                    >
-                      {root
-                        ? scaleType === "メジャー"
-                          ? root
-                          : root + "m"
-                        : "C"}
-                    </ThemedText>
+                    <TouchableOpacity style={{ flexDirection: "row" }}>
+                      <ThemedText
+                        style={{
+                          fontWeight: "bold",
+                          color: focused ? tint : color,
+                          fontSize, // フォントサイズを変更
+                        }}
+                      >
+                        {root}
+                      </ThemedText>
+                      <ThemedText
+                        style={{
+                          fontWeight: "bold",
+                          color: focused ? tint : color,
+                          fontSize, // フォントサイズを変更
+                        }}
+                      >
+                        {scaleType === "メジャー" ? "" : "m"}
+                      </ThemedText>
+                    </TouchableOpacity>
                   );
                 }}
               </MusicContext.Consumer>

@@ -95,7 +95,9 @@ const DramPage = () => {
               {chordEntries.map(([index, chordItem]) => (
                 <View key={index} style={styles.chordCell}>
                   <ThemedText>{scaleNotes[chordItem.chord] || ""}</ThemedText>
-                  <ThemedText>{chordItem.shape}</ThemedText>
+                  <ThemedText>
+                    {"major" === chordItem.shape ? "" : chordItem.shape}
+                  </ThemedText>
                 </View>
               ))}
             </ScrollView>
