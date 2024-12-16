@@ -22,6 +22,12 @@ export type ChordProgressionData = {
   [index: number]: ChordItem;
 } | null;
 
+export type SortedMelodyNote = {
+  name: string; // オクターブなしの音名 ("A", "A#", "B", ...)
+  index: number;
+  octave: number;
+};
+
 export interface MusicContextType {
   id: string;
   title: string;
@@ -47,7 +53,10 @@ export interface MusicContextType {
   setMelody: React.Dispatch<React.SetStateAction<MelobassData>>;
   bass: MelobassData;
   setBass: React.Dispatch<React.SetStateAction<MelobassData>>;
-  sortedMelodyNotes: { name: string; index: number }[];
+  sortedMelodyNotes: { name: string; index: number; octave: number }[];
   dram: DramData;
   setDram: React.Dispatch<React.SetStateAction<DramData>>;
+  playing: boolean;
+  setPlaying: React.Dispatch<React.SetStateAction<boolean>>;
+  shouldContinueRef: any;
 }

@@ -1,5 +1,5 @@
 // MusicContext.tsx
-import { createContext, useState, useEffect } from "react";
+import { createContext, useState, useEffect, useRef } from "react";
 import { useLocalSearchParams } from "expo-router";
 import { Project } from "./types/project";
 import { auth, db } from "@/firebase/firebaseConfig";
@@ -38,6 +38,9 @@ const defaultMusicContext: MusicContextType = {
   sortedMelodyNotes: [],
   dram: null,
   setDram: () => {},
+  playing: false,
+  setPlaying: () => {},
+  shouldContinueRef: false,
 };
 
 export const MusicContext =
@@ -59,9 +62,11 @@ export const ChordProvider = ({ children }: { children: React.ReactNode }) => {
   const [melody, setMelody] = useState<MelobassData>(null);
   const [bass, setBass] = useState<MelobassData>(null);
   const [sortedMelodyNotes, setSortedMelodyNotes] = useState<
-    { name: string; index: number }[]
+    { name: string; index: number; octave: number }[]
   >([]);
   const [dram, setDram] = useState<DramData>(null);
+  const [playing, setPlaying] = useState(false);
+  const shouldContinueRef = useRef(false); // グローバルで再生状態を管理
 
   useEffect(() => {
     if (auth.currentUser === null || !id) {
@@ -139,6 +144,7 @@ export const ChordProvider = ({ children }: { children: React.ReactNode }) => {
 
   useEffect(() => {
     if (!root) return;
+
     if (notes.length === 0) {
       setSortedMelodyNotes([]);
       return;
@@ -146,11 +152,24 @@ export const ChordProvider = ({ children }: { children: React.ReactNode }) => {
 
     const rootIndex = notes.indexOf(root);
     const sortNotes = [...notes.slice(rootIndex), ...notes.slice(0, rootIndex)];
+
     const calculatedNotes = [
-      ...sortNotes.slice(10, 12),
-      ...sortNotes,
-      ...sortNotes.slice(0, 2),
-    ].map((note, index) => ({ name: note, index }));
+      ...sortNotes.slice(10, 12).map((note, index) => ({
+        name: note,
+        octave: 2,
+        index,
+      })),
+      ...sortNotes.map((note, index) => ({
+        name: note,
+        octave: 3,
+        index: index + 2,
+      })),
+      ...sortNotes.slice(0, 3).map((note, index) => ({
+        name: note,
+        octave: 4,
+        index: index + sortNotes.length + 2,
+      })),
+    ];
 
     setSortedMelodyNotes((prev) => {
       const isSame =
@@ -190,6 +209,9 @@ export const ChordProvider = ({ children }: { children: React.ReactNode }) => {
         sortedMelodyNotes,
         dram,
         setDram,
+        playing,
+        setPlaying,
+        shouldContinueRef,
       }}
     >
       {children}

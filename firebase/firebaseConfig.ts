@@ -9,5 +9,4 @@ if (Platform.OS === "web") {
 }
 
 export const auth = config.auth;
-
 export const db = config.db;

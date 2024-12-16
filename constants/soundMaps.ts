@@ -1,4 +1,4 @@
-export const melodySoundsMap: Record<string, any> = {
+export const melodySoundsMap: { [key: string]: any } = {
   "2A": require("@/assets/sounds/melody/2A.wav"),
   "2A#": require("@/assets/sounds/melody/2A#.wav"),
   "2B": require("@/assets/sounds/melody/2B.wav"),
@@ -35,7 +35,7 @@ export const melodySoundsMap: Record<string, any> = {
   "5D": require("@/assets/sounds/melody/5D.wav"),
 };
 
-export const bassSoundsMap: Record<string, any> = {
+export const bassSoundsMap: { [key: string]: any } = {
   "0A": require("@/assets/sounds/bass/0A.wav"),
   "0A#": require("@/assets/sounds/bass/0A#.wav"),
   "0B": require("@/assets/sounds/bass/0B.wav"),
@@ -71,7 +71,7 @@ export const bassSoundsMap: Record<string, any> = {
   "3D": require("@/assets/sounds/bass/3D.wav"),
 };
 
-export const dramSoundsMap: Record<string, any> = {
+export const dramSoundsMap: { [key: string]: any } = {
   "bass-drum": require("@/assets/sounds/dram/bass-drum.wav"),
   clash: require("@/assets/sounds/dram/clash.wav"),
   "closed-hihat": require("@/assets/sounds/dram/closed-hihat.wav"),

@@ -1,67 +1,119 @@
-// // playMusicLogic.ts
+// playMusicLogic.ts
 import { Audio } from "expo-av";
 import {
   melodySoundsMap,
   bassSoundsMap,
   dramSoundsMap,
 } from "@/constants/soundMaps";
-import { NoteData } from "@/types/music";
+import { NoteData, SortedMelodyNote } from "@/types/music";
 
-const loadMelodySound = async (noteName: string) => {
-  const soundFile = melodySoundsMap[noteName];
-  if (!soundFile) {
-    console.log(`Melody sound not found: ${noteName}`);
-    return null;
+// 定数が存在しない場合の回避策
+const INTERRUPTION_MODE_IOS_DO_NOT_MIX = 1;
+const INTERRUPTION_MODE_ANDROID_DO_NOT_MIX = 1;
+
+// オーディオモードの設定（回避策）
+const setAudioModeWithFallback = async () => {
+  try {
+    await Audio.setAudioModeAsync({
+      allowsRecordingIOS: false,
+      staysActiveInBackground: false,
+      playsInSilentModeIOS: true,
+      shouldDuckAndroid: false,
+      interruptionModeIOS: INTERRUPTION_MODE_IOS_DO_NOT_MIX, // 1
+      interruptionModeAndroid: INTERRUPTION_MODE_ANDROID_DO_NOT_MIX, // 1
+      playThroughEarpieceAndroid: false,
+    });
+  } catch (error) {
+    console.log("Error setting audio mode with fallback:", error);
   }
-  const { sound } = await Audio.Sound.createAsync(soundFile);
-  return sound;
 };
 
-const loadBassSound = async (noteName: string) => {
-  const soundFile = bassSoundsMap[noteName];
-  if (!soundFile) {
-    console.log(`Bass sound not found: ${noteName}`);
-    return null;
+// サウンドマップからサウンドファイルを取得するヘルパー関数
+const getSoundFileByKey = (key: string) => {
+  if (melodySoundsMap[key]) return melodySoundsMap[key];
+  if (bassSoundsMap[key]) return bassSoundsMap[key];
+  if (dramSoundsMap[key]) return dramSoundsMap[key];
+  console.warn(`Sound file not found for key: ${key}`);
+  return null;
+};
+
+// サウンドプールを管理するクラス
+class SoundPool {
+  private pool: Record<string, Audio.Sound[]> = {};
+  private maxInstances: number;
+
+  constructor(maxInstancesPerSound: number = 4) {
+    this.maxInstances = maxInstancesPerSound;
   }
-  const { sound } = await Audio.Sound.createAsync(soundFile);
-  return sound;
-};
 
-const loadDramSound = async (instrumentName: string) => {
-  const soundFile = dramSoundsMap[instrumentName];
-  if (!soundFile) {
-    console.log(`Dram sound not found: ${instrumentName}`);
-    return null;
-  }
-  const { sound } = await Audio.Sound.createAsync(soundFile);
-  return sound;
-};
+  // サウンドをプールに追加
+  addSound = async (key: string, soundFile: any) => {
+    if (!soundFile) {
+      console.warn(
+        `Cannot add sound for key: ${key} because soundFile is null.`
+      );
+      return;
+    }
 
-const getDramInstrumentName = (instrumentIndex: number): string => {
-  return dramInstruments[instrumentIndex] || "snare";
-};
-
-interface ChordProgressionItem {
-  chord: number;
-  shape: string;
-}
-
-interface SortedMelodyNote {
-  name: string; // オクターブなしの音名("A","A#","B",...)
-  index: number;
-}
-interface MusicData {
-  root: string;
-  bpm: number;
-  scaleType: string;
-  scaleNotes: { [index: number]: string };
-  chordProgression: { [index: number]: ChordProgressionItem };
-  melody: { [measure: number]: { [beat: number]: NoteData } };
-  bass: { [measure: number]: { [beat: number]: NoteData } };
-  dram: {
-    [measure: number]: { [instrument: number]: { [step: number]: boolean } };
+    if (!this.pool[key]) {
+      this.pool[key] = [];
+    }
+    if (this.pool[key].length < this.maxInstances) {
+      try {
+        const { sound } = await Audio.Sound.createAsync(soundFile, {
+          shouldPlay: false,
+        });
+        this.pool[key].push(sound);
+      } catch (error) {
+        console.error(`Error loading sound for key ${key}:`, error);
+      }
+    }
   };
-  sortedMelodyNotes: { [i: number]: SortedMelodyNote };
+
+  // サウンドを再生
+  playSound = async (key: string, isBass: boolean) => {
+    const sounds = this.pool[key];
+    if (sounds && sounds.length > 0) {
+      // 最初に使用可能なサウンドを見つけて再生
+      for (const sound of sounds) {
+        try {
+          const status = await sound.getStatusAsync();
+          if (status.isLoaded && !status.isPlaying) {
+            await sound.replayAsync();
+            return;
+          }
+        } catch (error) {
+          console.error(`Error checking status for sound ${key}:`, error);
+        }
+      }
+      // すべてのサウンドが再生中の場合、新しいインスタンスを作成
+      const soundFile = getSoundFileByKey(key);
+      if (soundFile) {
+        try {
+          const { sound } = await Audio.Sound.createAsync(soundFile, {
+            shouldPlay: true,
+          });
+          this.pool[key].push(sound);
+        } catch (error) {
+          console.error(`Error creating new sound instance for ${key}:`, error);
+        }
+      }
+    } else {
+      console.warn(`No sounds available in pool for key: ${key}`);
+    }
+  };
+
+  // サウンドをアンロード
+  unloadAll = async () => {
+    const unloadPromises: Promise<any>[] = [];
+    for (const key in this.pool) {
+      for (const sound of this.pool[key]) {
+        unloadPromises.push(sound.unloadAsync());
+      }
+    }
+    await Promise.all(unloadPromises);
+    this.pool = {};
+  };
 }
 
 const dramInstruments = [
@@ -77,53 +129,50 @@ const dramInstruments = [
   "pedal-hihat",
 ];
 
+interface ChordProgressionItem {
+  chord: number;
+  shape: string;
+}
+
+interface MusicData {
+  root: string;
+  bpm: number;
+  scaleType: string;
+  scaleNotes: { [index: number]: string };
+  chordProgression: { [index: number]: ChordProgressionItem };
+  melody: { [measure: number]: { [beat: number]: NoteData } };
+  bass: { [measure: number]: { [beat: number]: NoteData } };
+  dram: {
+    [measure: number]: { [instrument: number]: { [step: number]: boolean } };
+  };
+  sortedMelodyNotes: { [i: number]: SortedMelodyNote };
+}
+
 const convertRelativeToNote = (
   relativePos: number,
   sortedMelodyNotes: { [i: number]: SortedMelodyNote }
 ): string | null => {
   const noteData = sortedMelodyNotes[relativePos];
-  return noteData ? noteData.name : null; // ここでは"A#"などオクターブなし返す
+  return noteData ? noteData.name : null; // "A#", "C"などオクターブなし
 };
 
-// オクターブ計算関数: relativePosからオクターブ付き音名を作成
-function getOctaveAdjustedNote(
-  noteName: string,
-  relativePos: number,
-  isBass: boolean
-): string {
-  // 12半音で1オクターブ上がると仮定
-  // メロディはbaseMelodyOctave=3スタート、ベースはbaseBassOctave=2スタートと例示
-  const baseMelodyOctave = 2;
-  const baseBassOctave = 0;
-  const baseOctave = isBass ? baseBassOctave : baseMelodyOctave;
-
-  // relativePosが0のときをbaseOctave+Cとするなら、rootや開始音によって調整が必要
-  // とりあえずrelativePos=0がbaseOctaveのCと仮定し、AやA#などの場合も一貫して同じ扱いにするには
-  // relativePosに応じてオクターブを計算
-  // 例えばrelativePos=0でbaseOctave内、relativePos=12で+1オクターブ
-  relativePos += 9;
-  console.log(baseOctave, noteName, relativePos);
-
-  const octave = baseOctave + Math.floor(relativePos / 12);
-  return `${octave}${noteName}`; // "3A#", "2C"など
-}
-
+// プレイバック関数
 export async function playMusic(
   data: MusicData,
   shouldContinue: () => boolean
 ) {
   const { bpm, melody, bass, dram, sortedMelodyNotes } = data;
 
-  const melodySounds: Record<string, Audio.Sound> = {};
-  const bassSounds: Record<string, Audio.Sound> = {};
-  const dramSounds: Record<string, Audio.Sound> = {};
+  // オーディオモードを設定
+  await setAudioModeWithFallback();
 
-  const beatDuration = (60 / bpm) * 1000; // quarter note
-  const dramStepDuration = beatDuration / 4;
-  const measureCount = Object.keys(dram).length;
-  const melodyBeatsPerMeasure = 4;
+  // サウンドプールの初期化
+  const soundPool = new SoundPool(4); // 各サウンドにつき最大4インスタンス
 
-  // 音声読み込み(メロディ)
+  // 全てのサウンドをプリロード
+  const preloadPromises: Promise<void>[] = [];
+
+  // メロディのサウンドプリロード
   for (let measureStr in melody) {
     const measure = Number(measureStr);
     for (let beatStr in melody[measure]) {
@@ -135,21 +184,18 @@ export async function playMusic(
           sortedMelodyNotes
         );
         if (baseNoteName) {
-          const fullName = getOctaveAdjustedNote(
-            baseNoteName,
-            noteObj.relativePos,
-            false
+          const fullName = `${
+            sortedMelodyNotes[noteObj.relativePos].octave
+          }${baseNoteName}`;
+          preloadPromises.push(
+            soundPool.addSound(fullName, melodySoundsMap[fullName])
           );
-          if (!melodySounds[fullName]) {
-            const sound = await loadMelodySound(fullName);
-            if (sound) melodySounds[fullName] = sound;
-          }
         }
       }
     }
   }
 
-  // 音声読み込み(ベース)
+  // ベースのサウンドプリロード
   for (let measureStr in bass) {
     const measure = Number(measureStr);
     for (let beatStr in bass[measure]) {
@@ -161,22 +207,24 @@ export async function playMusic(
           sortedMelodyNotes
         );
         if (baseNoteName) {
-          const fullName = getOctaveAdjustedNote(
-            baseNoteName,
-            noteObj.relativePos,
-            true
-          );
-          // ベースはisBass=trueで1オクターブ低い設定
-          if (!bassSounds[fullName]) {
-            const sound = await loadBassSound(fullName);
-            if (sound) bassSounds[fullName] = sound;
+          const melodyNote = sortedMelodyNotes[noteObj.relativePos];
+          if (!melodyNote) {
+            console.warn(
+              `No melody note found for relativePos: ${noteObj.relativePos}`
+            );
+            continue;
           }
+          const bassOctave = melodyNote.octave - 2;
+          const fullName = `${bassOctave}${baseNoteName}`;
+          preloadPromises.push(
+            soundPool.addSound(fullName, bassSoundsMap[fullName])
+          );
         }
       }
     }
   }
 
-  // 音声読み込み(ドラム)
+  // ドラムのサウンドプリロード
   for (let measureStr in dram) {
     const measure = Number(measureStr);
     for (let instrumentStr in dram[measure]) {
@@ -185,24 +233,40 @@ export async function playMusic(
         const step = Number(stepStr);
         const isActive = dram[measure][instrument][step];
         if (isActive) {
-          const instrumentName = getDramInstrumentName(instrument);
-          if (!dramSounds[instrumentName]) {
-            const sound = await loadDramSound(instrumentName);
-            if (sound) dramSounds[instrumentName] = sound;
-          }
+          const instrumentName = dramInstruments[instrument] || "snare";
+          preloadPromises.push(
+            soundPool.addSound(instrumentName, dramSoundsMap[instrumentName])
+          );
         }
       }
     }
   }
 
+  // 全てのサウンドをプリロード
   try {
-    // 無限ループ
+    await Promise.all(preloadPromises);
+    console.log("All sounds preloaded successfully.");
+  } catch (error) {
+    console.log("Error preloading sounds:", error);
+    return;
+  }
+
+  const beatDuration = (60 / bpm) * 1000; // quarter note in ms
+  const dramStepDuration = beatDuration / 4;
+  const measureCount = Object.keys(dram).length;
+  const melodyBeatsPerMeasure = 4;
+
+  // 再生ループ
+  try {
     while (shouldContinue()) {
       for (let measure = 0; measure < measureCount; measure++) {
         if (!shouldContinue()) break;
         for (let beat = 0; beat < melodyBeatsPerMeasure; beat++) {
           if (!shouldContinue()) break;
 
+          const startTime = Date.now();
+
+          // メロディの再生
           const melodyNote = melody[measure]?.[beat];
           if (melodyNote && melodyNote.relativePos !== null) {
             const baseNoteName = convertRelativeToNote(
@@ -210,18 +274,20 @@ export async function playMusic(
               sortedMelodyNotes
             );
             if (baseNoteName && shouldContinue()) {
-              const fullName = getOctaveAdjustedNote(
-                baseNoteName,
-                melodyNote.relativePos,
-                false
-              );
-              const sound = melodySounds[fullName];
-              if (sound) {
-                await sound.replayAsync();
+              const melodyNoteData = sortedMelodyNotes[melodyNote.relativePos];
+              if (!melodyNoteData) {
+                console.warn(
+                  `No melody note data found for relativePos: ${melodyNote.relativePos}`
+                );
+                continue;
               }
+              const fullName = `${melodyNoteData.octave}${baseNoteName}`;
+              console.log(`Playing melody sound: ${fullName}`);
+              await soundPool.playSound(fullName, false);
             }
           }
 
+          // ベースの再生
           const bassNote = bass[measure]?.[beat];
           if (bassNote && bassNote.relativePos !== null) {
             const baseNoteName = convertRelativeToNote(
@@ -229,37 +295,44 @@ export async function playMusic(
               sortedMelodyNotes
             );
             if (baseNoteName && shouldContinue()) {
-              const fullName = getOctaveAdjustedNote(
-                baseNoteName,
-                bassNote.relativePos,
-                true
-              );
-              const sound = bassSounds[fullName];
-              if (sound) {
-                await sound.replayAsync();
+              const bassNoteData = sortedMelodyNotes[bassNote.relativePos];
+              if (!bassNoteData) {
+                console.warn(
+                  `No melody note data found for bass relativePos: ${bassNote.relativePos}`
+                );
+                continue;
               }
+              const bassOctave = bassNoteData.octave - 2;
+              const fullName = `${bassOctave}${baseNoteName}`;
+              console.log(`Playing bass sound: ${fullName}`);
+              await soundPool.playSound(fullName, true);
             }
           }
 
+          // ドラムの再生
           for (let stepInBeat = 0; stepInBeat < 4; stepInBeat++) {
             if (!shouldContinue()) break;
             const dramStep = beat * 4 + stepInBeat;
             if (dram[measure]) {
-              for (let instrument = 0; instrument < 10; instrument++) {
+              for (
+                let instrument = 0;
+                instrument < dramInstruments.length;
+                instrument++
+              ) {
                 const isActive = dram[measure][instrument]?.[dramStep];
                 if (isActive && shouldContinue()) {
-                  const instrumentName = getDramInstrumentName(instrument);
-                  const sound = dramSounds[instrumentName];
-                  if (sound) {
-                    await sound.replayAsync();
-                  }
+                  const instrumentName = dramInstruments[instrument] || "snare";
+                  console.log(`Playing drum sound: ${instrumentName}`);
+                  await soundPool.playSound(instrumentName, false);
                 }
               }
             }
-            if (!shouldContinue()) break;
-            await new Promise((resolve) =>
-              setTimeout(resolve, dramStepDuration)
-            );
+            // タイミング調整
+            const elapsed = Date.now() - startTime;
+            const delay = dramStepDuration - elapsed;
+            if (delay > 0) {
+              await new Promise((resolve) => setTimeout(resolve, delay));
+            }
           }
         }
       }
@@ -267,9 +340,12 @@ export async function playMusic(
   } catch (error) {
     console.log("Playback error:", error);
   } finally {
-    // 終了時リソース解放
-    Object.values(melodySounds).forEach((sound) => sound.unloadAsync());
-    Object.values(bassSounds).forEach((sound) => sound.unloadAsync());
-    Object.values(dramSounds).forEach((sound) => sound.unloadAsync());
+    // リソースの解放
+    try {
+      await soundPool.unloadAll();
+      console.log("All sounds unloaded successfully.");
+    } catch (error) {
+      console.log("Error unloading sounds:", error);
+    }
   }
 }

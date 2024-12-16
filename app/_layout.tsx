@@ -8,7 +8,6 @@ import { Stack } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
 import { useEffect } from "react";
 import "react-native-get-random-values";
-import { GestureHandlerRootView } from "react-native-gesture-handler";
 
 import { useColorScheme } from "@/hooks/useColorScheme";
 import { useThemeColor } from "@/hooks/useThemeColor";
@@ -35,31 +34,29 @@ export default function RootLayout() {
   }
 
   return (
-    <GestureHandlerRootView style={{ flex: 1 }}>
-      <ThemeProvider value={colorScheme === "dark" ? DarkTheme : DefaultTheme}>
-        <Stack
-          screenOptions={{
-            title: "",
-            headerShown: true,
-            headerStyle: {
-              backgroundColor: tab,
-            },
-            headerTitleStyle: {
-              color: text,
-            },
+    <ThemeProvider value={colorScheme === "dark" ? DarkTheme : DefaultTheme}>
+      <Stack
+        screenOptions={{
+          title: "",
+          headerShown: true,
+          headerStyle: {
+            backgroundColor: tab,
+          },
+          headerTitleStyle: {
+            color: text,
+          },
+        }}
+      >
+        <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+        <Stack.Screen name="(auth)" options={{ headerShown: false }} />
+        <Stack.Screen
+          name="list"
+          options={{
+            headerRight: () => <LogOutButton />,
           }}
-        >
-          <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-          <Stack.Screen name="(auth)" options={{ headerShown: false }} />
-          <Stack.Screen
-            name="list"
-            options={{
-              headerRight: () => <LogOutButton />,
-            }}
-          />
-          <Stack.Screen name="+not-found" />
-        </Stack>
-      </ThemeProvider>
-    </GestureHandlerRootView>
+        />
+        <Stack.Screen name="+not-found" />
+      </Stack>
+    </ThemeProvider>
   );
 }
