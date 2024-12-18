@@ -16,7 +16,7 @@ const handlePress = (): void => {
 };
 
 export const LogOutButton = (): JSX.Element => {
-  const text = useThemeColor({}, "icon");
+  const text = useThemeColor({}, "text");
   return (
     <TouchableOpacity onPress={handlePress}>
       <Text style={[styles.text, { color: text }]}>ログアウト</Text>
