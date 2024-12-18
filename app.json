@@ -1,8 +1,8 @@
 {
   "expo": {
     "newArchEnabled": true,
-    "name": "music-app",
-    "slug": "music-app",
+    "name": "CircleTone",
+    "slug": "CircleTone",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
@@ -10,17 +10,21 @@
     "userInterfaceStyle": "automatic",
     "splash": {
       "image": "./assets/images/splash.png",
-      "resizeMode": "contain",
+      "resizeMode": "cover",
       "backgroundColor": "#ffffff"
     },
     "ios": {
-      "supportsTablet": true,
-      "bundleIdentifier": "com.kyooo.musicapp"
+      "supportsTablet": false,
+      "bundleIdentifier": "com.kyooo.musicapp",
+      "buildNumber": "1.0.0"
     },
     "android": {
+      "packege": "com.kyooo.musicapp",
+      "versionCode": 1,
+      "permissions": [],
       "adaptiveIcon": {
-        "foregroundImage": "./assets/images/adaptive-icon.png",
-        "backgroundColor": "#ffffff"
+        "foregroundImage": "./assets/images/icon-adaptive-icon.png",
+        "backgroundColor": "./assets/images/icon-adaptive-background.png"
       }
     },
     "web": {
@@ -28,10 +32,7 @@
       "output": "static",
       "favicon": "./assets/images/favicon.png"
     },
-    "plugins": [
-      "expo-router",
-      "expo-font"
-    ],
+    "plugins": ["expo-router", "expo-font"],
     "experiments": {
       "typedRoutes": true
     },
