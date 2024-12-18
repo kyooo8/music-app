@@ -7,7 +7,7 @@ import { MusicContext } from "@/MusicContext";
 import { useThemeColor } from "@/hooks/useThemeColor";
 
 export const SaveButton = () => {
-  const text = useThemeColor({}, "icon");
+  const text = useThemeColor({}, "text");
   const {
     id,
     title,
@@ -24,7 +24,7 @@ export const SaveButton = () => {
   // console.log("root", root);
   // console.log("bpm", bpm);
   // console.log("scaleType", scaleType);
-  console.log("chordProgression", chordProgression);
+  // console.log("chordProgression", chordProgression);
   // console.log("melody", melody);
   // console.log("bass", bass);
   // console.log("dram", dram);

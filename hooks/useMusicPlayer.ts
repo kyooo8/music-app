@@ -1,5 +1,5 @@
 // useMusicPlayer.ts
-import { useContext, useState, useRef } from "react";
+import { useContext } from "react";
 import { MusicContext } from "@/MusicContext";
 import { playMusic } from "./playMusicLogic";
 
@@ -14,10 +14,10 @@ export function useMusicPlayer() {
     bass,
     dram,
     sortedMelodyNotes,
+    shouldContinueRef,
+    playing,
+    setPlaying,
   } = useContext(MusicContext);
-
-  const [playing, setPlaying] = useState(false);
-  const shouldContinueRef = useRef(false); // 再生中フラグをrefで管理
 
   const play = async () => {
     if (!root || !chordProgression || !melody || !bass || !dram) {

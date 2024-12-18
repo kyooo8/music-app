@@ -1,5 +1,5 @@
 // MusicContext.tsx
-import { createContext, useState, useEffect } from "react";
+import { createContext, useState, useEffect, useRef } from "react";
 import { useLocalSearchParams } from "expo-router";
 import { Project } from "./types/project";
 import { auth, db } from "@/firebase/firebaseConfig";
@@ -38,6 +38,9 @@ const defaultMusicContext: MusicContextType = {
   sortedMelodyNotes: [],
   dram: null,
   setDram: () => {},
+  playing: false,
+  setPlaying: () => {},
+  shouldContinueRef: false,
 };
 
 export const MusicContext =
@@ -62,6 +65,8 @@ export const ChordProvider = ({ children }: { children: React.ReactNode }) => {
     { name: string; index: number }[]
   >([]);
   const [dram, setDram] = useState<DramData>(null);
+  const [playing, setPlaying] = useState(false);
+  const shouldContinueRef = useRef(false); // 再生中フラグをrefで管理
 
   useEffect(() => {
     if (auth.currentUser === null || !id) {
@@ -190,6 +195,9 @@ export const ChordProvider = ({ children }: { children: React.ReactNode }) => {
         sortedMelodyNotes,
         dram,
         setDram,
+        playing,
+        setPlaying,
+        shouldContinueRef,
       }}
     >
       {children}

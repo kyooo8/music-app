@@ -50,4 +50,7 @@ export interface MusicContextType {
   sortedMelodyNotes: { name: string; index: number }[];
   dram: DramData;
   setDram: React.Dispatch<React.SetStateAction<DramData>>;
+  playing: boolean;
+  setPlaying: React.Dispatch<React.SetStateAction<boolean>>;
+  shouldContinueRef: any;
 }

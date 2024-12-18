@@ -27,6 +27,7 @@ export const ChordProgression = () => {
   const chordCard = useThemeColor({}, "chordCard");
   const tint = useThemeColor({}, "tint");
   const text = useThemeColor({}, "text");
+  const red = useThemeColor({}, "melody");
 
   const { root, scaleNotes, chordProgression, setChordProgression } =
     useContext(MusicContext);
@@ -105,6 +106,21 @@ export const ChordProgression = () => {
     [handleLongPress, scaleNotes, chordCard]
   );
 
+  const deleteChord = useCallback(() => {
+    if (selectedChordIndex === null) return;
+
+    setChordProgression((prev) => {
+      if (!prev) return prev;
+
+      // オブジェクトをコピーしてから指定キーを削除
+      const updated = { ...prev };
+      delete updated[selectedChordIndex]; // 指定されたインデックスを削除
+      return updated;
+    });
+
+    setModalVisible(false); // モーダルを閉じる
+  }, [selectedChordIndex, setChordProgression]);
+
   return (
     <View style={[styles.chordProgressionContainer, { backgroundColor: tab }]}>
       <ThemedText type="subtitle">コード進行</ThemedText>
@@ -138,6 +154,12 @@ export const ChordProgression = () => {
               )
             )}
             <TouchableOpacity
+              style={[styles.modalCloseButton, { backgroundColor: red }]}
+              onPress={() => deleteChord()}
+            >
+              <ThemedText>削除</ThemedText>
+            </TouchableOpacity>
+            <TouchableOpacity
               style={[styles.modalCloseButton, { backgroundColor: tint }]}
               onPress={() => setModalVisible(false)}
             >
@@ -166,8 +188,8 @@ const styles = StyleSheet.create({
   },
   chordCard: {
     marginRight: 16,
-    padding: 20,
-    width: 160,
+    padding: 10,
+    width: 80,
     height: 80,
     borderRadius: 8,
     alignItems: "center",

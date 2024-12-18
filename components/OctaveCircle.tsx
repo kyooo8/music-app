@@ -69,7 +69,7 @@ export const OctaveCircle = () => {
   const handleLongPress = (note: string) => {
     if (scaleNotes?.includes(note)) {
       const chordIndex = scaleNotes.indexOf(note);
-      setChordProgression((prev) => {
+      setChordProgression((prev: any) => {
         if (!prev) {
           // prevがnullなら新たにオブジェクトを作成
           return { 0: { chord: chordIndex, shape: "major" } };
@@ -83,8 +83,8 @@ export const OctaveCircle = () => {
           )
           .sort((a, b) => a[0] - b[0]);
 
-        if (entries.length >= 8) {
-          alert("最大8個まで");
+        if (entries.length >= 4) {
+          alert("最大4個まで");
           return prev;
         }
 
