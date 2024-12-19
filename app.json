@@ -10,8 +10,7 @@
     "userInterfaceStyle": "automatic",
     "splash": {
       "image": "./assets/images/splash.png",
-      "resizeMode": "cover",
-      "backgroundColor": "#ffffff"
+      "resizeMode": "cover"
     },
     "ios": {
       "supportsTablet": false,
@@ -41,8 +40,9 @@
         "origin": false
       },
       "eas": {
-        "projectId": "29507197-8c56-4a27-8f6e-678ce007b60a"
+        "projectId": "46e7110b-712b-4437-93c4-829eae24fcb9"
       }
-    }
+    },
+    "owner": "kyooo"
   }
 }

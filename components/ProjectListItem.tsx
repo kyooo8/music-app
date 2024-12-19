@@ -1,47 +1,63 @@
-import React from "react";
+import React, { useContext } from "react";
 import { TouchableOpacity, View, StyleSheet, Alert } from "react-native";
 import { Link } from "expo-router";
 import { ThemedText } from "./ThemedText";
 import { Project } from "@/types/project";
-import { deleteDoc, doc } from "firebase/firestore";
+import { deleteDoc, doc, Timestamp } from "firebase/firestore";
 import { auth, db } from "@/firebase/firebaseConfig";
 import { useThemeColor } from "@/hooks/useThemeColor";
+import { LoginContext } from "@/context/LoginContext";
 
 interface Props {
   project: Project;
+  onDeleteRequest: (id: string) => void;
 }
 
 export const ProjectListItem = (props: Props) => {
   const border = useThemeColor({}, "text");
-  const { project } = props;
+  const { isLogin } = useContext(LoginContext);
+  const { project, onDeleteRequest } = props;
   const { updatedAt } = project;
+
   if (updatedAt === null) {
     return null;
   }
-  const dateString = project.updatedAt.toDate().toLocaleString("ja-JP");
 
-  const handleLongPress = (id: string) => {
-    console.log(project.id);
+  let date: Date;
 
-    Alert.alert("オプション", `${project.title}の操作を選択してください`, [
-      { text: "キャンセル", style: "cancel" },
+  if (updatedAt instanceof Timestamp) {
+    date = updatedAt.toDate();
+  } else if (
+    typeof updatedAt === "object" &&
+    updatedAt !== null &&
+    "seconds" in updatedAt &&
+    "nanoseconds" in updatedAt
+  ) {
+    const millis = updatedAt.seconds * 1000 + updatedAt.nanoseconds / 1000000;
+    date = new Date(millis);
+  } else if (typeof updatedAt === "string") {
+    date = new Date(updatedAt);
+  } else {
+    date = new Date();
+  }
+
+  const dateString = date.toLocaleString("ja-JP");
+
+  const handleLongPress = (id: string, title: string) => {
+    Alert.alert("削除", `${title}を削除しますか？`, [
+      { text: "いいえ" },
       {
-        text: "削除する",
+        text: "削除",
         style: "destructive",
-        onPress: () => {
-          const ref = doc(db, `users/${auth.currentUser?.uid}/projects`, id);
-          Alert.alert("削除します", "よろしいですか？", [
-            { text: "いいえ" },
-            {
-              text: "削除",
-              style: "destructive",
-              onPress: () => {
-                deleteDoc(ref).catch(() => {
-                  Alert.alert("削除に失敗しました");
-                });
-              },
-            },
-          ]);
+        onPress: async () => {
+          if (isLogin) {
+            const ref = doc(db, `users/${auth.currentUser?.uid}/projects`, id);
+            deleteDoc(ref).catch(() => {
+              Alert.alert("削除に失敗しました");
+            });
+          } else {
+            onDeleteRequest(id);
+          }
         },
       },
     ]);
@@ -56,7 +72,9 @@ export const ProjectListItem = (props: Props) => {
       >
         <TouchableOpacity
           style={styles.musicContainer}
-          onLongPress={() => handleLongPress(project.id)}
+          onLongPress={() =>
+            handleLongPress(project.id ? project.id : "", project.title)
+          }
         >
           <View style={styles.leftBox}>
             <ThemedText type="subtitle">{project.title}</ThemedText>

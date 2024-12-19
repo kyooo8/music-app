@@ -2,7 +2,7 @@ import { useEffect, useState, useContext } from "react";
 import { View, TextInput, StyleSheet, Keyboard } from "react-native";
 
 import { ThemedText } from "./ThemedText";
-import { MusicContext } from "@/MusicContext";
+import { MusicContext } from "@/context/MusicContext";
 import { Colors } from "@/constants/Colors";
 import { useTheme } from "@react-navigation/native";
 import { useThemeColor } from "@/hooks/useThemeColor";
@@ -42,7 +42,7 @@ export const Bpm = () => {
         returnKeyType="done"
         onChangeText={handleChange}
         onSubmitEditing={handleSubmitEditing}
-        blurOnSubmit={false}
+        blurOnSubmit={true}
         value={tempValue}
         style={[styles.textInput, styles.defaultSemiBold, { color: textColor }]}
       />

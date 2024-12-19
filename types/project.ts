@@ -7,7 +7,7 @@ import {
 } from "@/types/music";
 
 export interface Project {
-  id: string;
+  id?: string;
   title: string;
   description: string;
   root: string | null;
@@ -17,5 +17,9 @@ export interface Project {
   melody?: MelobassData;
   bass?: MelobassData;
   dram?: DramData;
-  updatedAt: Timestamp;
+  updatedAt: Timestamp | TimestampObject | Date | string;
+}
+interface TimestampObject {
+  seconds: number;
+  nanoseconds: number;
 }

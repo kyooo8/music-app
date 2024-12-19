@@ -1,16 +1,20 @@
-// MelodyParts.tsx
 import React, { useContext, useCallback } from "react";
 import { View, StyleSheet, TouchableOpacity } from "react-native";
-import { MusicContext } from "@/MusicContext";
+import { MusicContext } from "@/context/MusicContext";
 import {
   cellheight,
   cellmargin,
   cellWidth,
   lastItemMargin,
 } from "@/constants/Style";
+import { Audio } from "expo-av";
 import { ThemedText } from "./ThemedText";
 import { MelobassData } from "@/types/music";
 import { useThemeColor } from "@/hooks/useThemeColor";
+import { fadeOutSound, getOctaveAdjustedNote } from "@/hooks/playMusicLogic";
+import { melodySoundsMap } from "@/constants/soundMaps";
+
+const sound = new Audio.Sound();
 
 interface Props {
   note: { name: string; index: number };
@@ -22,14 +26,39 @@ export const MelodyParts = React.memo(
   ({ note, chordIndex, chordItem }: Props) => {
     const tab = useThemeColor({}, "tab");
     const tint = useThemeColor({}, "melody");
-    const { melody, setMelody, scaleNotes, bass } = useContext(MusicContext);
+    const { melody, setMelody, scaleNotes, bass, sortedMelodyNotes } =
+      useContext(MusicContext);
+    const sound = new Audio.Sound();
 
-    // 音符セルをタップした時の処理をメモ化
+    const objectSortedMelodyNotes = Object.fromEntries(
+      sortedMelodyNotes.map((n, i) => [i, n])
+    );
+    const playSound = async (relativePos: number, note: string) => {
+      const fullName = getOctaveAdjustedNote(
+        note,
+        relativePos,
+        false,
+        objectSortedMelodyNotes
+      );
+      try {
+        console.log(fullName);
+
+        const soundFile = melodySoundsMap[fullName];
+        await sound.loadAsync(soundFile);
+        await sound.playAsync();
+        setTimeout(async () => {
+          await fadeOutSound(sound, 300);
+        }, 800);
+      } catch (error) {
+        console.error("音声再生エラー:", error);
+      }
+    };
+
     const handleNoteInput = useCallback(
       (measure: number, beat: number) => {
         setMelody((prev) => {
           const oldMelody = prev || {};
-          // measureが存在しなければ初期化
+
           const measureObj = oldMelody[measure] || {};
 
           const currentNote = measureObj[beat];
@@ -47,7 +76,6 @@ export const MelodyParts = React.memo(
       [setMelody, note.index]
     );
 
-    // 表示内容をメモ化
     const getDisplay = useCallback(
       (chord: number) => {
         if (scaleNotes[chord] === note.name) return "ルート";
@@ -86,7 +114,10 @@ export const MelodyParts = React.memo(
                   },
                   styles.gridCell,
                 ]}
-                onPress={() => handleNoteInput(chordIndex, beat)}
+                onPress={() => {
+                  playSound(note.index, note.name),
+                    handleNoteInput(chordIndex, beat);
+                }}
               >
                 {isBassSelected && <View style={styles.overlay}></View>}
                 <ThemedText type="small">

@@ -5,15 +5,13 @@ import {
   TouchableOpacity,
   FlatList,
   Modal,
-  Text,
   Alert,
 } from "react-native";
-import { MusicContext } from "@/MusicContext";
+import { MusicContext } from "@/context/MusicContext";
 import { ThemedText } from "@/components/ThemedText";
-import { Icon } from "./Icon";
 import { v4 as uuidv4 } from "uuid";
 import { useThemeColor } from "@/hooks/useThemeColor";
-import { ChordItem, ChordShape } from "@/types/music";
+import { ChordShape } from "@/types/music";
 
 interface ChordDisplayItem {
   id: string;
@@ -36,7 +34,6 @@ export const ChordProgression = () => {
     null
   );
 
-  // モーダル表示の状態管理
   const [isModalVisible, setModalVisible] = useState(false);
 
   useEffect(() => {
@@ -51,22 +48,24 @@ export const ChordProgression = () => {
       shape: v.shape,
     }));
     setData(entries);
+    if (Object.entries(chordProgression).length === 0) {
+      setChordProgression(null);
+    }
   }, [chordProgression]);
 
   const handleLongPress = useCallback((index: number) => {
     setSelectedChordIndex(index);
-    setModalVisible(true); // モーダルを表示
+    setModalVisible(true);
   }, []);
 
   const updateChordShape = useCallback(
     (shape: ChordShape) => {
       if (selectedChordIndex === null) return;
-      // chordIndexを使用してルート判定
       const currentChord = data.find(
         (item) => item.index === selectedChordIndex
       );
       if (currentChord && scaleNotes[currentChord.chordIndex] === root) {
-        setModalVisible(false); // モーダルを閉じる
+        setModalVisible(false);
         Alert.alert("ルート音は変更できません");
         return;
       }
@@ -80,7 +79,7 @@ export const ChordProgression = () => {
         return updated;
       });
 
-      setModalVisible(false); // モーダルを閉じる
+      setModalVisible(false);
     },
     [selectedChordIndex, setChordProgression]
   );
@@ -94,8 +93,10 @@ export const ChordProgression = () => {
         <ThemedText type="small">
           {scaleNotes && (
             <>
-              <ThemedText>{scaleNotes[item.chordIndex]}</ThemedText>
-              <ThemedText>
+              <ThemedText type="defaultSemiBold">
+                {scaleNotes[item.chordIndex]}
+              </ThemedText>
+              <ThemedText type="small" style={{ fontWeight: "bold" }}>
                 {item.shape === "major" ? "" : item.shape}
               </ThemedText>
             </>
@@ -108,31 +109,44 @@ export const ChordProgression = () => {
 
   const deleteChord = useCallback(() => {
     if (selectedChordIndex === null) return;
-
     setChordProgression((prev) => {
       if (!prev) return prev;
-
-      // オブジェクトをコピーしてから指定キーを削除
       const updated = { ...prev };
-      delete updated[selectedChordIndex]; // 指定されたインデックスを削除
+      delete updated[selectedChordIndex];
       return updated;
     });
-
-    setModalVisible(false); // モーダルを閉じる
+    setModalVisible(false);
   }, [selectedChordIndex, setChordProgression]);
 
   return (
     <View style={[styles.chordProgressionContainer, { backgroundColor: tab }]}>
       <ThemedText type="subtitle">コード進行</ThemedText>
-      <FlatList
-        horizontal
-        data={data}
-        renderItem={renderItem}
-        keyExtractor={(item) => item.id}
-        style={styles.flatList}
-      />
+      {chordProgression ? (
+        <FlatList
+          horizontal
+          data={data}
+          renderItem={renderItem}
+          keyExtractor={(item) => item.id}
+          style={styles.flatList}
+        />
+      ) : (
+        <View
+          style={{
+            marginTop: 24,
+            marginRight: 8,
+            padding: "auto",
+            width: "100%",
+            height: 80,
+            justifyContent: "center",
+            alignItems: "center",
+          }}
+        >
+          <ThemedText style={{ color: chordCard }}>
+            {root ? "コードを長押しして選択" : "ルートをダブルタップで選択"}
+          </ThemedText>
+        </View>
+      )}
 
-      {/* 型変更用のモーダル */}
       <Modal
         visible={isModalVisible}
         transparent={true}
@@ -141,7 +155,6 @@ export const ChordProgression = () => {
       >
         <View style={styles.modalContainer}>
           <View style={[styles.modal, { backgroundColor: tab }]}>
-            <ThemedText type="subtitle">型を選択してください</ThemedText>
             {(["major", "7", "add9", "m", "M7", "susu4"] as ChordShape[]).map(
               (shape) => (
                 <TouchableOpacity
@@ -175,10 +188,9 @@ export const ChordProgression = () => {
 const styles = StyleSheet.create({
   chordProgressionContainer: {
     width: "100%",
-    height: "100%",
     maxWidth: 350,
     maxHeight: 200,
-    marginTop: 40,
+    marginTop: "auto",
     marginBottom: 30,
     padding: 20,
     borderRadius: 8,
@@ -187,9 +199,9 @@ const styles = StyleSheet.create({
     marginTop: 24,
   },
   chordCard: {
-    marginRight: 16,
-    padding: 10,
-    width: 80,
+    marginRight: 8,
+    padding: 1,
+    width: 70,
     height: 80,
     borderRadius: 8,
     alignItems: "center",

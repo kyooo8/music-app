@@ -2,7 +2,7 @@ import { StyleSheet, View } from "react-native";
 import { useEffect, useContext } from "react";
 
 import { ScaleType } from "@/types/music";
-import { MusicContext } from "@/MusicContext";
+import { MusicContext } from "@/context/MusicContext";
 import { ThemedText } from "@/components/ThemedText";
 import { OctaveCircle } from "@/components/OctaveCircle";
 import { ScaleCircle } from "@/components/ScaleCircle";

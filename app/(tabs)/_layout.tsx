@@ -1,7 +1,7 @@
-import { Tabs } from "expo-router";
+import { router, Tabs } from "expo-router";
 import React from "react";
 import { Icon } from "@/components/Icon";
-import { MusicContext, ChordProvider } from "@/MusicContext";
+import { MusicContext, ChordProvider } from "@/context/MusicContext";
 import { useThemeColor } from "@/hooks/useThemeColor";
 import { ThemedText } from "@/components/ThemedText";
 import { SaveButton } from "@/components/SaveButton";
@@ -9,7 +9,6 @@ import { TouchableOpacity } from "react-native";
 
 export default function TabLayout() {
   const tint = useThemeColor({}, "tint");
-  const bg = useThemeColor({}, "background");
   const tab = useThemeColor({}, "tab");
   const text = useThemeColor({}, "text");
   return (
@@ -26,20 +25,27 @@ export default function TabLayout() {
           },
           headerStyle: { backgroundColor: tab },
           headerTitleStyle: { color: text },
-          headerTitleAlign: "left",
+          headerLeft: () => (
+            <TouchableOpacity
+              style={{ marginLeft: 15 }}
+              onPress={() => {
+                router.replace("/list");
+              }}
+            >
+              <ThemedText style={{ fontSize: 14 }}>〈 ホーム</ThemedText>
+            </TouchableOpacity>
+          ),
           headerRight: () => <SaveButton />,
         }}
       >
         <Tabs.Screen
           name="chord"
           options={{
-            title: "コード",
+            title: "Circle",
             tabBarIcon: ({ color, focused }) => (
               <MusicContext.Consumer>
                 {(context) => {
-                  const { root, scaleType } = context; // MusicContextからrootとscaleTypeを取得
-
-                  // mが表示される場合にフォントサイズを調整
+                  const { root, scaleType } = context;
                   const fontSize =
                     root && scaleType !== "メジャー"
                       ? root.length === 2
@@ -48,25 +54,35 @@ export default function TabLayout() {
                       : 20;
 
                   return (
-                    <TouchableOpacity style={{ flexDirection: "row" }}>
+                    <TouchableOpacity
+                      style={{
+                        flexDirection: "row",
+                        justifyContent: "center",
+                        alignItems: "center",
+                      }}
+                    >
                       <ThemedText
                         style={{
                           fontWeight: "bold",
                           color: focused ? tint : color,
-                          fontSize, // フォントサイズを変更
+                          fontSize,
                         }}
                       >
                         {root}
                       </ThemedText>
-                      <ThemedText
-                        style={{
-                          fontWeight: "bold",
-                          color: focused ? tint : color,
-                          fontSize, // フォントサイズを変更
-                        }}
-                      >
-                        {scaleType === "メジャー" ? "" : "m"}
-                      </ThemedText>
+                      {scaleType === "マイナー" ? (
+                        <ThemedText
+                          style={{
+                            fontWeight: "bold",
+                            color: focused ? tint : color,
+                            fontSize,
+                          }}
+                        >
+                          m
+                        </ThemedText>
+                      ) : (
+                        <></>
+                      )}
                     </TouchableOpacity>
                   );
                 }}
@@ -76,21 +92,11 @@ export default function TabLayout() {
         />
 
         <Tabs.Screen
-          name="melobass"
+          name="input"
           options={{
-            title: "メロディー・ベース",
+            title: "Note",
             tabBarIcon: ({ color, focused }) => (
-              <Icon name={"melody"} size={28} color={focused ? tint : color} />
-            ),
-          }}
-        />
-
-        <Tabs.Screen
-          name="dram"
-          options={{
-            title: "ドラム",
-            tabBarIcon: ({ color, focused }) => (
-              <Icon name={"dram"} size={28} color={focused ? tint : color} />
+              <Icon name={"pencil"} size={28} color={focused ? tint : color} />
             ),
           }}
         />

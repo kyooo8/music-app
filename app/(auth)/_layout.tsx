@@ -1,3 +1,6 @@
+import { TouchableOpacity } from "react-native";
+import { router } from "expo-router";
+import { ThemedText } from "@/components/ThemedText";
 import { useThemeColor } from "@/hooks/useThemeColor";
 import { Tabs } from "expo-router";
 
@@ -10,6 +13,16 @@ export default function TabLayout() {
         tabBarStyle: { display: "none" },
         headerShown: true,
         headerStyle: { backgroundColor: tab },
+        headerLeft: () => (
+          <TouchableOpacity
+            style={{ marginLeft: 15 }}
+            onPress={() => {
+              router.replace("/list");
+            }}
+          >
+            <ThemedText style={{ fontSize: 14 }}>〈 ホーム</ThemedText>
+          </TouchableOpacity>
+        ),
       }}
     >
       <Tabs.Screen

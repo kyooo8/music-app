@@ -1,7 +1,7 @@
 import React, { useCallback, useContext } from "react";
 import { View, StyleSheet, TouchableOpacity } from "react-native";
 
-import { MusicContext } from "@/MusicContext";
+import { MusicContext } from "@/context/MusicContext";
 import {
   cellheight,
   cellmargin,
@@ -16,12 +16,43 @@ interface Props {
   chordIndex: number;
   chordItem: { chord: number; shape: string };
 }
+import { Audio } from "expo-av";
+import { fadeOutSound, getOctaveAdjustedNote } from "@/hooks/playMusicLogic";
+import { bassSoundsMap } from "@/constants/soundMaps";
+
+const sound = new Audio.Sound();
 
 export const BassParts = React.memo(
   ({ note, chordIndex, chordItem }: Props) => {
     const tab = useThemeColor({}, "tab");
     const tint = useThemeColor({}, "tint");
-    const { bass, setBass, scaleNotes, melody } = useContext(MusicContext);
+    const { bass, setBass, scaleNotes, melody, sortedMelodyNotes } =
+      useContext(MusicContext);
+    const sound = new Audio.Sound();
+
+    const objectSortedMelodyNotes = Object.fromEntries(
+      sortedMelodyNotes.map((n, i) => [i, n])
+    );
+    const playSound = async (relativePos: number, note: string) => {
+      const fullName = getOctaveAdjustedNote(
+        note,
+        relativePos,
+        true,
+        objectSortedMelodyNotes
+      );
+      try {
+        console.log(fullName);
+
+        const soundFile = bassSoundsMap[fullName];
+        await sound.loadAsync(soundFile);
+        await sound.playAsync();
+        setTimeout(async () => {
+          await fadeOutSound(sound, 300);
+        }, 800);
+      } catch (error) {
+        console.error("音声再生エラー:", error);
+      }
+    };
 
     const handleNoteInput = useCallback(
       (measure: number, beat: number) => {
@@ -76,7 +107,10 @@ export const BassParts = React.memo(
                   },
                   styles.gridCell,
                 ]}
-                onPress={() => handleNoteInput(chordIndex, beat)}
+                onPress={() => {
+                  playSound(note.index, note.name);
+                  handleNoteInput(chordIndex, beat);
+                }}
               >
                 {isMelodySelected && <View style={styles.overlay}></View>}
                 <ThemedText type="small">

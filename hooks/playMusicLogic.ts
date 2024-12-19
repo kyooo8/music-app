@@ -7,7 +7,7 @@ import {
 } from "@/constants/soundMaps";
 import { NoteData } from "@/types/music";
 
-const loadMelodySound = async (noteName: string) => {
+export const loadMelodySound = async (noteName: string) => {
   const soundFile = melodySoundsMap[noteName];
   if (!soundFile) {
     console.log(`Melody sound not found: ${noteName}`);
@@ -27,7 +27,7 @@ const loadBassSound = async (noteName: string) => {
   return sound;
 };
 
-const loadDramSound = async (instrumentName: string) => {
+export const loadDramSound = async (instrumentName: string) => {
   const soundFile = dramSoundsMap[instrumentName];
   if (!soundFile) {
     console.log(`Dram sound not found: ${instrumentName}`);
@@ -47,8 +47,9 @@ interface ChordProgressionItem {
 }
 
 interface SortedMelodyNote {
-  name: string; // オクターブなしの音名("A","A#","B",...)
+  name: string;
   index: number;
+  octave: number;
 }
 interface MusicData {
   root: string;
@@ -64,11 +65,11 @@ interface MusicData {
   sortedMelodyNotes: { [i: number]: SortedMelodyNote };
 }
 
-const dramInstruments = [
+export const dramInstruments = [
   "hand-clap",
-  "tamtam",
-  "floor-tom",
-  "crash",
+  "high-tom",
+  "low-tom",
+  "clash",
   "ride",
   "open-hihat",
   "closed-hihat",
@@ -76,6 +77,22 @@ const dramInstruments = [
   "bass-drum",
   "pedal-hihat",
 ];
+
+export const fadeOutSound = async (sound: Audio.Sound, duration: number) => {
+  const steps = 10; // フェードアウトを10ステップで行う
+  const stepDuration = duration / steps; // 各ステップの間隔(ms)
+  let currentVolume = 1.0;
+
+  for (let i = 0; i <= steps; i++) {
+    const volume = 1.0 - i / steps;
+    await sound.setVolumeAsync(volume);
+    await new Promise((resolve) => setTimeout(resolve, stepDuration));
+  }
+
+  // フェードアウト終了後に停止と解放
+  await sound.stopAsync();
+  await sound.unloadAsync();
+};
 
 const convertRelativeToNote = (
   relativePos: number,
@@ -86,25 +103,14 @@ const convertRelativeToNote = (
 };
 
 // オクターブ計算関数: relativePosからオクターブ付き音名を作成
-function getOctaveAdjustedNote(
+export function getOctaveAdjustedNote(
   noteName: string,
   relativePos: number,
-  isBass: boolean
+  isBass: boolean,
+  sortedMelody: { [i: number]: SortedMelodyNote }
 ): string {
-  // 12半音で1オクターブ上がると仮定
-  // メロディはbaseMelodyOctave=3スタート、ベースはbaseBassOctave=2スタートと例示
-  const baseMelodyOctave = 2;
-  const baseBassOctave = 0;
-  const baseOctave = isBass ? baseBassOctave : baseMelodyOctave;
-
-  // relativePosが0のときをbaseOctave+Cとするなら、rootや開始音によって調整が必要
-  // とりあえずrelativePos=0がbaseOctaveのCと仮定し、AやA#などの場合も一貫して同じ扱いにするには
-  // relativePosに応じてオクターブを計算
-  // 例えばrelativePos=0でbaseOctave内、relativePos=12で+1オクターブ
-  relativePos += 9;
-  console.log(baseOctave, noteName, relativePos);
-
-  const octave = baseOctave + Math.floor(relativePos / 12);
+  let baseOctave = isBass ? 2 : 0;
+  const octave = sortedMelody[relativePos].octave - baseOctave;
   return `${octave}${noteName}`; // "3A#", "2C"など
 }
 
@@ -138,7 +144,8 @@ export async function playMusic(
           const fullName = getOctaveAdjustedNote(
             baseNoteName,
             noteObj.relativePos,
-            false
+            false,
+            sortedMelodyNotes
           );
           if (!melodySounds[fullName]) {
             const sound = await loadMelodySound(fullName);
@@ -164,7 +171,8 @@ export async function playMusic(
           const fullName = getOctaveAdjustedNote(
             baseNoteName,
             noteObj.relativePos,
-            true
+            true,
+            sortedMelodyNotes
           );
           // ベースはisBass=trueで1オクターブ低い設定
           if (!bassSounds[fullName]) {
@@ -213,7 +221,8 @@ export async function playMusic(
               const fullName = getOctaveAdjustedNote(
                 baseNoteName,
                 melodyNote.relativePos,
-                false
+                false,
+                sortedMelodyNotes
               );
               const sound = melodySounds[fullName];
               if (sound) {
@@ -232,7 +241,8 @@ export async function playMusic(
               const fullName = getOctaveAdjustedNote(
                 baseNoteName,
                 bassNote.relativePos,
-                true
+                true,
+                sortedMelodyNotes
               );
               const sound = bassSounds[fullName];
               if (sound) {

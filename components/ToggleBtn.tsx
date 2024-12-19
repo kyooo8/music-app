@@ -1,5 +1,5 @@
 import { useState, useContext } from "react";
-import { MusicContext } from "@/MusicContext";
+import { MusicContext } from "@/context/MusicContext";
 import { Text, TouchableOpacity, StyleSheet, Animated } from "react-native";
 import { ChordProgressionData } from "@/types/music";
 

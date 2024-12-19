@@ -4,8 +4,9 @@ import {
   Button,
   TextInput,
   TouchableOpacity,
+  Alert,
 } from "react-native";
-import { useState } from "react";
+import { useContext, useState } from "react";
 import { Link, router } from "expo-router";
 import { auth } from "@/firebase/firebaseConfig";
 import { createUserWithEmailAndPassword } from "firebase/auth";
@@ -14,22 +15,24 @@ import { useThemeColor } from "@/hooks/useThemeColor";
 import { ThemedText } from "@/components/ThemedText";
 import { ThemedView } from "@/components/ThemedView";
 
-const handlePress = (email: string, password: string) => {
-  createUserWithEmailAndPassword(auth, email, password)
-    .then(() => {
-      router.replace("/");
-    })
-    .catch((e) => {
-      alert(e);
-    });
-};
-
 export default function SingupPage() {
   const tab = useThemeColor({}, "tab");
   const text = useThemeColor({}, "text");
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+
+  const handlePress = (email: string, password: string) => {
+    createUserWithEmailAndPassword(auth, email, password)
+      .then(() => {
+        Alert.alert("アカウントを作成しました");
+        router.replace("/");
+      })
+      .catch((e) => {
+        alert(e);
+      });
+  };
+
   return (
     <ThemedView style={[styles.container]}>
       <View style={styles.inner}>

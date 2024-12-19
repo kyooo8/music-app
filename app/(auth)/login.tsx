@@ -4,6 +4,7 @@ import {
   Button,
   TextInput,
   TouchableOpacity,
+  Alert,
 } from "react-native";
 import { useState } from "react";
 import { Link, router } from "expo-router";
@@ -14,22 +15,23 @@ import { ThemedText } from "@/components/ThemedText";
 import { ThemedView } from "@/components/ThemedView";
 import { useThemeColor } from "@/hooks/useThemeColor";
 
-const handlePress = (email: string, password: string) => {
-  signInWithEmailAndPassword(auth, email, password)
-    .then(() => {
-      router.replace("/list");
-    })
-    .catch((e) => {
-      alert(e);
-    });
-};
-
 export default function LoginPage() {
   const tab = useThemeColor({}, "tab");
   const text = useThemeColor({}, "text");
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+
+  const handlePress = (email: string, password: string) => {
+    signInWithEmailAndPassword(auth, email, password)
+      .then(() => {
+        Alert.alert("ログインしました");
+        router.replace("/");
+      })
+      .catch((e) => {
+        alert(e);
+      });
+  };
 
   return (
     <ThemedView style={[styles.container]}>

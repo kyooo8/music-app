@@ -3,13 +3,14 @@ import MelodyPage from "../../components/Melody";
 import BassPage from "../../components/Bass";
 import { TouchableOpacity, StyleSheet, View } from "react-native";
 import { ThemedView } from "@/components/ThemedView";
-import { MusicContext } from "@/MusicContext";
+import { MusicContext } from "@/context/MusicContext";
 import { Icon } from "@/components/Icon";
 import { useThemeColor } from "@/hooks/useThemeColor";
 import { ThemedText } from "@/components/ThemedText";
 import { HeaderBottom } from "@/components/HeaderBottom";
+import DramPage from "@/components/Dram";
 
-type Mode = "melody" | "bass";
+type Mode = "melody" | "bass" | "dram";
 
 export default function MelobassPage() {
   const tab = useThemeColor({}, "tab");
@@ -30,11 +31,11 @@ export default function MelobassPage() {
 
   return (
     <ThemedView style={{ flex: 1 }}>
-      <HeaderBottom></HeaderBottom>
+      <HeaderBottom input={true} />
       <View style={[styles.selecter, { backgroundColor: tab }]}>
         <TouchableOpacity
           onPress={() => setMode("melody")}
-          style={styles.selectIcon}
+          style={[styles.selectIcon, { marginLeft: 20 }]}
         >
           <Icon
             size={36}
@@ -54,12 +55,25 @@ export default function MelobassPage() {
           ></Icon>
           <ThemedText type="small">ベース</ThemedText>
         </TouchableOpacity>
+        <TouchableOpacity
+          onPress={() => setMode("dram")}
+          style={styles.selectIcon}
+        >
+          <Icon
+            size={36}
+            name="dram"
+            color={mode === "dram" ? tint : circle}
+          ></Icon>
+          <ThemedText type="small">ドラム</ThemedText>
+        </TouchableOpacity>
       </View>
 
       {mode === "melody" ? (
         <MelodyPage chordEntries={chordEntries} />
-      ) : (
+      ) : mode === "bass" ? (
         <BassPage chordEntries={chordEntries} />
+      ) : (
+        <DramPage />
       )}
     </ThemedView>
   );
@@ -68,13 +82,16 @@ export default function MelobassPage() {
 const styles = StyleSheet.create({
   selecter: {
     flexDirection: "row",
-    marginTop: 40,
+    marginTop: -48,
     marginRight: 10,
+    marginBottom: 10,
     marginLeft: "auto",
     borderRadius: 8,
   },
   selectIcon: {
-    marginInline: 16,
+    marginRight: 26,
     marginBlock: 8,
+    justifyContent: "center",
+    alignItems: "center",
   },
 });

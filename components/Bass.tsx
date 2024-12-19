@@ -8,7 +8,7 @@ import {
   lastItemMargin,
 } from "@/constants/Style";
 import { MelobassData } from "@/types/music";
-import { MusicContext } from "@/MusicContext";
+import { MusicContext } from "@/context/MusicContext";
 import { ThemedText } from "@/components/ThemedText";
 import { BassParts } from "@/components/BassParts";
 import { ThemedView } from "@/components/ThemedView";
@@ -58,7 +58,6 @@ export default function BassPage({ chordEntries }: Props) {
     <ThemedView style={[styles.container]}>
       {chordProgression && chordEntries.length > 0 ? (
         <>
-          {/* コード進行の表示 */}
           <View style={styles.chordRow}>
             <View style={{ width: 44.3 }}></View>
             <ScrollView
@@ -147,10 +146,11 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   chordRow: {
-    height: "10%",
+    height: 40,
     flexDirection: "row",
   },
   chordCell: {
+    flexDirection: "row",
     width: cellWidth * 4 + cellmargin * 6,
     marginRight: lastItemMargin + cellmargin,
     marginLeft: cellmargin,
@@ -161,6 +161,7 @@ const styles = StyleSheet.create({
   gridContainer: {
     flexDirection: "row",
     flex: 1,
+    marginBottom: 30,
   },
   noteLabelContainer: {
     width: 50,

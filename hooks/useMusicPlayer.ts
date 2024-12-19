@@ -1,7 +1,8 @@
 // useMusicPlayer.ts
 import { useContext } from "react";
-import { MusicContext } from "@/MusicContext";
+import { MusicContext } from "@/context/MusicContext";
 import { playMusic } from "./playMusicLogic";
+import { Alert } from "react-native";
 
 export function useMusicPlayer() {
   const {
@@ -21,7 +22,7 @@ export function useMusicPlayer() {
 
   const play = async () => {
     if (!root || !chordProgression || !melody || !bass || !dram) {
-      console.log("Not enough data to play");
+      Alert.alert("全てのNoteを設定してください");
       return;
     }
 

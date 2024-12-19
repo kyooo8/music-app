@@ -1,6 +1,6 @@
 import React, { useContext, useEffect, useRef } from "react";
 import { Animated, StyleSheet } from "react-native";
-import { MusicContext } from "@/MusicContext";
+import { MusicContext } from "@/context/MusicContext";
 
 export const ScaleCircle = () => {
   const { scaleType, root } = useContext(MusicContext);

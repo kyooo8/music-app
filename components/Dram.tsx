@@ -6,7 +6,7 @@ import React, {
   useCallback,
 } from "react";
 import { ScrollView, View, StyleSheet } from "react-native";
-import { MusicContext } from "../../MusicContext";
+import { MusicContext } from "../context/MusicContext";
 import { ThemedText } from "@/components/ThemedText";
 import { ThemedView } from "@/components/ThemedView";
 import { HeaderBottom } from "@/components/HeaderBottom";
@@ -21,7 +21,7 @@ import { DramData } from "@/types/music";
 import DramParts from "@/components/DramParts";
 
 const dramNotes = [
-  "f-hihat",
+  "手拍子",
   "ハイタム",
   "ロータム",
   "clash",
@@ -30,11 +30,10 @@ const dramNotes = [
   "c-hihat",
   "スネア",
   "バス",
-  "手拍子",
+  "f-hihat",
 ];
 
 const DramPage = () => {
-  const tab = useThemeColor({}, "tab");
   const { chordProgression, scaleNotes, dram, setDram } =
     useContext(MusicContext);
 
@@ -80,7 +79,6 @@ const DramPage = () => {
 
   return (
     <ThemedView style={styles.container}>
-      <HeaderBottom />
       {chordProgression && chordEntries.length > 0 ? (
         <>
           {/* コード進行の表示 */}
@@ -194,7 +192,7 @@ const styles = StyleSheet.create({
   },
   noteLabelContent: {},
   noteLabel: {
-    height: cellheight,
+    height: cellheight + 14,
     margin: cellmargin,
     justifyContent: "center",
     alignItems: "center",

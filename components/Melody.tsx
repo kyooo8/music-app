@@ -1,8 +1,8 @@
 // MelodyPage.tsx
-import React, { useContext, useEffect, useMemo, useRef } from "react";
+import React, { useContext, useEffect, useRef } from "react";
 import { ScrollView, View, StyleSheet } from "react-native";
 
-import { MusicContext } from "@/MusicContext";
+import { MusicContext } from "@/context/MusicContext";
 import { ThemedText } from "@/components/ThemedText";
 import { MelodyParts } from "@/components/MelodyParts";
 import {
@@ -39,7 +39,6 @@ export default function MelodyPage({ chordEntries }: Props) {
   const verticalScrollRef = useRef<ScrollView>(null);
   const horizontalScrollRef = useRef<ScrollView>(null);
 
-  // メロディーの初期化
   useEffect(() => {
     if (!melody && chordProgression) {
       const measureCount = Object.keys(chordProgression).length;
@@ -60,7 +59,6 @@ export default function MelodyPage({ chordEntries }: Props) {
     <ThemedView style={styles.container}>
       {chordProgression && chordEntries.length > 0 ? (
         <>
-          {/* コード進行の表示 */}
           <View style={styles.chordRow}>
             <View style={{ width: 44.3 }}></View>
             <ScrollView
@@ -149,10 +147,11 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   chordRow: {
-    height: "10%",
+    height: 40,
     flexDirection: "row",
   },
   chordCell: {
+    flexDirection: "row",
     width: cellWidth * 4 + cellmargin * 6,
     marginRight: lastItemMargin + cellmargin,
     marginLeft: cellmargin,
@@ -163,6 +162,7 @@ const styles = StyleSheet.create({
   gridContainer: {
     flexDirection: "row",
     flex: 1,
+    marginBottom: 30,
   },
   noteLabelContainer: {
     width: 50,

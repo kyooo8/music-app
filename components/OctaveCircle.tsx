@@ -7,7 +7,7 @@ import {
   TouchableOpacity,
 } from "react-native";
 import { useRef, useEffect, useContext } from "react";
-import { MusicContext } from "@/MusicContext";
+import { MusicContext } from "@/context/MusicContext";
 import { useThemeColor } from "@/hooks/useThemeColor";
 
 export const OctaveCircle = () => {

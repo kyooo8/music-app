@@ -47,7 +47,7 @@ export interface MusicContextType {
   setMelody: React.Dispatch<React.SetStateAction<MelobassData>>;
   bass: MelobassData;
   setBass: React.Dispatch<React.SetStateAction<MelobassData>>;
-  sortedMelodyNotes: { name: string; index: number }[];
+  sortedMelodyNotes: { name: string; index: number; octave: number }[];
   dram: DramData;
   setDram: React.Dispatch<React.SetStateAction<DramData>>;
   playing: boolean;

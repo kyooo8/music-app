@@ -12,7 +12,15 @@
       "distribution": "internal"
     },
     "production": {
-      "autoIncrement": true
+      "autoIncrement": true,
+      "env": {
+        "EXPO_PUBLIC_APIKEY": "AIzaSyBc8gmhaprVtFUozQqaMO8Z6wNPEJXOB-I",
+        "EXPO_PUBLIC_AUTH_DOMAIN": "music-eac34.firebaseapp.com",
+        "EXPO_PUBLIC_PROJECT_ID": "music-eac34",
+        "EXPO_PUBLIC_STORAGE_BUCKET": "music-eac34.firebasestorage.app",
+        "EXPO_PUBLIC_MESSAGING_SENDER_ID": "769012916980",
+        "EXPO_PUBLIC_APP_ID": "1:769012916980:web:e319d90aae50fdc4e774a1"
+      }
     }
   },
   "submit": {

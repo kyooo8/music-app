@@ -1,7 +1,8 @@
-import { Text, StyleSheet, TouchableOpacity } from "react-native";
-import { useEffect, useState } from "react";
+import React, { View, Text, StyleSheet, TouchableOpacity } from "react-native";
+import { useContext, useEffect, useState } from "react";
 import { collection, onSnapshot, orderBy, query } from "firebase/firestore";
 import { router } from "expo-router";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
 import { auth, db } from "@/firebase/firebaseConfig";
 import { ProjectListItem } from "@/components/ProjectListItem";
@@ -9,14 +10,34 @@ import { Project } from "@/types/project";
 import ParallaxScrollView from "@/components/ParallaxScrollView";
 import { ThemedView } from "@/components/ThemedView";
 import { useThemeColor } from "@/hooks/useThemeColor";
+import { LoginContext } from "@/context/LoginContext";
+import { ThemedText } from "@/components/ThemedText";
 
 export default function ListPage() {
   const tint = useThemeColor({}, "tint");
-  const text = useThemeColor({}, "text");
+  const { isLogin } = useContext(LoginContext);
+  const [projects, setProjects] = useState<Project[]>([]);
 
-  const [projects, setprojects] = useState<Project[]>([]);
+  const handleDeleteProject = async (id: string) => {
+    const storedData = await AsyncStorage.getItem("projects");
+    const projectsArray = storedData ? JSON.parse(storedData) : [];
+    const filteredProjects = projectsArray.filter((p: Project) => p.id !== id);
+    await AsyncStorage.setItem("projects", JSON.stringify(filteredProjects));
 
-  useEffect(() => {
+    setProjects(filteredProjects);
+  };
+
+  const fetchProjectsFromAsyncStorage = async () => {
+    try {
+      const storedData = await AsyncStorage.getItem("projects");
+      const localProjects: Project[] = storedData ? JSON.parse(storedData) : [];
+      setProjects(localProjects);
+    } catch (error) {
+      console.error("AsyncStorage取得エラー:", error);
+    }
+  };
+
+  const fetchProjectsFromFirestore = () => {
     const ref = collection(db, `users/${auth.currentUser?.uid}/projects`);
     const q = query(ref, orderBy("updatedAt", "desc"));
     const unsubscribe = onSnapshot(q, (snapShot) => {
@@ -34,18 +55,48 @@ export default function ListPage() {
           updatedAt,
         });
       });
-      setprojects(remoteProjects);
+      setProjects(remoteProjects);
     });
     return unsubscribe;
-  }, []);
+  };
+
+  useEffect(() => {
+    if (isLogin) {
+      const unsubscribe = fetchProjectsFromFirestore();
+      return () => unsubscribe();
+    } else {
+      fetchProjectsFromAsyncStorage();
+    }
+  }, [isLogin]);
+
   return (
     <ThemedView style={styles.container}>
-      <ParallaxScrollView>
-        {projects.map((project) => (
-          <ProjectListItem key={project.id} project={project} />
-        ))}
-      </ParallaxScrollView>
-
+      {projects.length === 0 ? (
+        <View
+          style={{ flex: 1, justifyContent: "center", alignItems: "center" }}
+        >
+          {isLogin ? (
+            <ThemedText>プロジェクトを作成しましょう </ThemedText>
+          ) : (
+            <>
+              <ThemedText style={{ marginBottom: 10 }}>
+                アカウントが見つかりません
+              </ThemedText>
+              <ThemedText>2つまでプロジェクトを保存できます</ThemedText>
+            </>
+          )}
+        </View>
+      ) : (
+        <ParallaxScrollView>
+          {projects.map((project) => (
+            <ProjectListItem
+              key={project.id}
+              project={project}
+              onDeleteRequest={handleDeleteProject}
+            />
+          ))}
+        </ParallaxScrollView>
+      )}
       <TouchableOpacity
         style={[styles.createBtn, { backgroundColor: tint }]}
         onPress={() => router.replace("/(tabs)/chord")}

@@ -4,21 +4,27 @@ import { PlayBtn } from "./PlayBtn";
 import { Bpm } from "./Bpm";
 import { ToggleButton } from "./ToggleBtn";
 
-export const HeaderBottom = () => {
+interface Props {
+  input?: boolean;
+}
+
+export const HeaderBottom = ({ input }: Props) => {
   return (
     <View style={styles.settingContainer}>
       <PlayBtn />
-      <View style={{ position: "absolute", right: 10 }}>
-        <Bpm />
-        <ToggleButton />
-      </View>
+      {input ?? (
+        <View style={{ position: "absolute", right: 10 }}>
+          <Bpm />
+          <ToggleButton />
+        </View>
+      )}
     </View>
   );
 };
 
 const styles = StyleSheet.create({
   settingContainer: {
-    position: "relative",
+    flexDirection: "row",
     width: "100%",
     marginTop: 16,
   },

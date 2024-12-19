@@ -1,15 +1,21 @@
 import React, { useContext, useCallback } from "react";
 import { View, StyleSheet, TouchableOpacity } from "react-native";
 import { Colors } from "@/constants/Colors";
-import { MusicContext } from "@/MusicContext";
+import { MusicContext } from "@/context/MusicContext";
 import {
   cellheight,
   cellmargin,
   cellWidth,
   lastItemMargin,
 } from "@/constants/Style";
-import { ThemedText } from "./ThemedText";
 import { useThemeColor } from "@/hooks/useThemeColor";
+import { Audio } from "expo-av";
+import {
+  dramInstruments,
+  fadeOutSound,
+  loadDramSound,
+} from "@/hooks/playMusicLogic";
+import { dramSoundsMap } from "@/constants/soundMaps";
 
 interface Props {
   note: string;
@@ -17,10 +23,29 @@ interface Props {
   noteIndex: number;
 }
 
+const sound = new Audio.Sound();
+
 const DramParts = React.memo(({ note, chordIndex, noteIndex }: Props) => {
   const tab = useThemeColor({}, "tab");
   const tint = useThemeColor({}, "tint");
   const { dram, setDram } = useContext(MusicContext);
+
+  const playSound = async (noteIndex: number) => {
+    try {
+      const instrumentName = dramInstruments[noteIndex];
+      const soundFile = dramSoundsMap[instrumentName];
+      if (sound._loaded) {
+        await sound.unloadAsync();
+      }
+      await sound.loadAsync(soundFile);
+      await sound.playAsync();
+      setTimeout(async () => {
+        await fadeOutSound(sound, 1000);
+      }, 800);
+    } catch (error) {
+      console.error("音楽再生エラー", error);
+    }
+  };
 
   const handleNoteInput = useCallback(
     (measure: number, instrument: number, step: number) => {
@@ -60,7 +85,10 @@ const DramParts = React.memo(({ note, chordIndex, noteIndex }: Props) => {
                 styles.gridCell,
                 { backgroundColor: isSelected ? tint : tab },
               ]}
-              onPress={() => handleNoteInput(chordIndex, noteIndex, step)}
+              onPress={() => {
+                playSound(noteIndex);
+                handleNoteInput(chordIndex, noteIndex, step);
+              }}
             ></TouchableOpacity>
           );
         })}
@@ -76,7 +104,7 @@ const styles = StyleSheet.create({
   },
   gridCell: {
     width: cellWidth / 2,
-    height: cellheight,
+    height: cellheight + 14,
     alignItems: "center",
     justifyContent: "center",
     margin: cellmargin,
