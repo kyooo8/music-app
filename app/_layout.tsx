@@ -61,6 +61,12 @@ export default function RootLayout() {
                 headerRight: () => <LogOutButton />,
               }}
             />
+            <Stack.Screen
+              name="index"
+              options={{
+                headerShown: false,
+              }}
+            />
             <Stack.Screen name="+not-found" />
           </Stack>
         </ThemeProvider>

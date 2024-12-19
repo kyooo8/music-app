@@ -6,6 +6,7 @@ import { addDoc, collection } from "firebase/firestore";
 import { auth, db } from "@/firebase/firebaseConfig";
 import { LoginContext } from "@/context/LoginContext";
 import { Project } from "@/types/project";
+import { View, Image } from "react-native";
 
 export default function Index() {
   let isSynced = false;
@@ -41,5 +42,10 @@ export default function Index() {
     return () => unsubscribe();
   }, []);
 
-  return null;
+  return (
+    <Image
+      source={require("@/assets/images/splash.png")}
+      style={{ width: "100%", height: "100%" }}
+    ></Image>
+  );
 }
