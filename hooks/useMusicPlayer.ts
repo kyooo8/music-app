@@ -1,8 +1,7 @@
 // useMusicPlayer.ts
-import { useContext } from "react";
+import { useContext, useState } from "react";
 import { MusicContext } from "@/context/MusicContext";
 import { playMusic } from "./playMusicLogic";
-import { Alert } from "react-native";
 
 export function useMusicPlayer() {
   const {
@@ -16,16 +15,29 @@ export function useMusicPlayer() {
     dram,
     sortedMelodyNotes,
     shouldContinueRef,
-    playing,
     setPlaying,
   } = useContext(MusicContext);
 
-  const play = async () => {
-    if (!root || !chordProgression || !melody || !bass || !dram) {
-      Alert.alert("全てのNoteを設定してください");
-      return;
-    }
+  // 再生するパートのオプションをState管理
+  const [playMelodyOnly, setPlayMelodyOnly] = useState(false);
+  const [playBassOnly, setPlayBassOnly] = useState(false);
+  const [playDramOnly, setPlayDramOnly] = useState(false);
+  const [playMelodyAndBass, setPlayMelodyAndBass] = useState(false);
 
+  const getPlayOptions = () => {
+    if (playMelodyOnly) {
+      return { playMelody: true, playBass: false, playDram: false };
+    } else if (playBassOnly) {
+      return { playMelody: false, playBass: true, playDram: false };
+    } else if (playDramOnly) {
+      return { playMelody: false, playBass: false, playDram: true };
+    } else if (playMelodyAndBass) {
+      return { playMelody: true, playBass: true, playDram: false };
+    }
+    return { playMelody: true, playBass: true, playDram: true };
+  };
+
+  const play = async () => {
     setPlaying(true);
     shouldContinueRef.current = true;
 
@@ -35,30 +47,36 @@ export function useMusicPlayer() {
           root,
           bpm,
           scaleType,
-          scaleNotes: scaleNotes, // MusicContext から取得したものを渡す
-          chordProgression,
-          melody,
-          bass,
-          dram,
+          scaleNotes: Object.fromEntries(scaleNotes.map((n, i) => [i, n])),
+          chordProgression: chordProgression || {},
+          melody: melody || {},
+          bass: bass || {},
+          dram: dram || {},
           sortedMelodyNotes: Object.fromEntries(
             sortedMelodyNotes.map((n, i) => [i, n])
           ),
         },
-        () => shouldContinueRef.current // refから現在のshouldContinueを返す
+        () => shouldContinueRef.current,
+        getPlayOptions()
       );
     } catch (err) {
       console.log("Playback error:", err);
     } finally {
-      // 音源再生が終了した後にplayingをfalseへ
-      setPlaying(false);
+      setPlaying(true);
     }
   };
 
   const stop = () => {
-    // playMusic内でshouldContinue()がfalseになるまで待って終了
     shouldContinueRef.current = false;
     setPlaying(false);
   };
 
-  return { playing, play, stop };
+  return {
+    play,
+    stop,
+    setPlayMelodyOnly,
+    setPlayBassOnly,
+    setPlayDramOnly,
+    setPlayMelodyAndBass,
+  };
 }

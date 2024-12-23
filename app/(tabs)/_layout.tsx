@@ -5,12 +5,15 @@ import { MusicContext, ChordProvider } from "@/context/MusicContext";
 import { useThemeColor } from "@/hooks/useThemeColor";
 import { ThemedText } from "@/components/ThemedText";
 import { SaveButton } from "@/components/SaveButton";
-import { TouchableOpacity } from "react-native";
+import { TouchableOpacity, View, StyleSheet } from "react-native";
+import { PlayBtn } from "@/components/PlayBtn";
 
 export default function TabLayout() {
   const tint = useThemeColor({}, "tint");
   const tab = useThemeColor({}, "tab");
   const text = useThemeColor({}, "text");
+  const bg = useThemeColor({}, "background");
+
   return (
     <ChordProvider>
       <Tabs
@@ -22,6 +25,7 @@ export default function TabLayout() {
             backgroundColor: tab,
             borderTopWidth: 0,
             borderTopColor: "transparent",
+            position: "relative",
           },
           headerStyle: { backgroundColor: tab },
           headerTitleStyle: { color: text },
@@ -54,13 +58,7 @@ export default function TabLayout() {
                       : 20;
 
                   return (
-                    <TouchableOpacity
-                      style={{
-                        flexDirection: "row",
-                        justifyContent: "center",
-                        alignItems: "center",
-                      }}
-                    >
+                    <View style={styles.tabIconContainer}>
                       <ThemedText
                         style={{
                           fontWeight: "bold",
@@ -80,27 +78,53 @@ export default function TabLayout() {
                         >
                           m
                         </ThemedText>
-                      ) : (
-                        <></>
-                      )}
-                    </TouchableOpacity>
+                      ) : null}
+                    </View>
                   );
                 }}
               </MusicContext.Consumer>
             ),
           }}
         />
-
         <Tabs.Screen
           name="input"
           options={{
             title: "Note",
             tabBarIcon: ({ color, focused }) => (
-              <Icon name={"pencil"} size={28} color={focused ? tint : color} />
+              <Icon name={"pencil"} size={34} color={focused ? tint : color} />
             ),
           }}
         />
       </Tabs>
+      <View
+        style={[
+          styles.playButtonContainer,
+          { backgroundColor: tab, borderColor: bg },
+        ]}
+      >
+        <PlayBtn />
+      </View>
     </ChordProvider>
   );
 }
+
+const styles = StyleSheet.create({
+  tabIconContainer: {
+    flexDirection: "row",
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  playButtonContainer: {
+    position: "absolute",
+    bottom: 36,
+    left: "50%",
+    transform: [{ translateX: -35 }],
+    zIndex: 10,
+    width: 70,
+    height: 70,
+    borderRadius: 35,
+    justifyContent: "center",
+    alignItems: "center",
+    borderWidth: 4,
+  },
+});

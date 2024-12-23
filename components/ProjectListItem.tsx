@@ -14,7 +14,7 @@ interface Props {
 }
 
 export const ProjectListItem = (props: Props) => {
-  const border = useThemeColor({}, "text");
+  const tab = useThemeColor({}, "tab");
   const { isLogin } = useContext(LoginContext);
   const { project, onDeleteRequest } = props;
   const { updatedAt } = project;
@@ -64,35 +64,42 @@ export const ProjectListItem = (props: Props) => {
   };
 
   return (
-    <>
-      <Link
-        href={{ pathname: `/(tabs)/chord`, params: { id: project.id } }}
-        replace
-        asChild
+    <Link
+      href={{ pathname: `/(tabs)/chord`, params: { id: project.id } }}
+      style={{
+        backgroundColor: tab,
+        padding: 16,
+        marginBottom: 12,
+        borderRadius: 8,
+      }}
+      replace
+      asChild
+    >
+      <TouchableOpacity
+        style={styles.musicContainer}
+        onLongPress={() =>
+          handleLongPress(project.id ? project.id : "", project.title)
+        }
       >
-        <TouchableOpacity
-          style={styles.musicContainer}
-          onLongPress={() =>
-            handleLongPress(project.id ? project.id : "", project.title)
-          }
-        >
-          <View style={styles.leftBox}>
-            <ThemedText type="subtitle">{project.title}</ThemedText>
-            <View>
-              <ThemedText>key : {project.root}</ThemedText>
-              <ThemedText>BPM : {project.bpm}</ThemedText>
-            </View>
-          </View>
+        <View style={styles.leftBox}>
+          <ThemedText type="subtitle">{project.title}</ThemedText>
           <View>
-            <ThemedText numberOfLines={2} style={{ marginBottom: 20 }}>
-              {dateString}
-            </ThemedText>
-            <ThemedText>{project.description}</ThemedText>
+            <ThemedText>key : {project.root}</ThemedText>
+            <ThemedText>BPM : {project.bpm}</ThemedText>
           </View>
-        </TouchableOpacity>
-      </Link>
-      <View style={[styles.bar, { borderBottomColor: border }]}></View>
-    </>
+        </View>
+        <View>
+          <ThemedText
+            numberOfLines={2}
+            style={{ marginBottom: 20 }}
+            type="small"
+          >
+            {dateString}
+          </ThemedText>
+          <ThemedText>{project.description}</ThemedText>
+        </View>
+      </TouchableOpacity>
+    </Link>
   );
 };
 
@@ -100,16 +107,11 @@ const styles = StyleSheet.create({
   musicContainer: {
     flexDirection: "row",
     justifyContent: "space-between",
-    height: 85,
+    height: 125,
     width: "100%",
   },
   leftBox: {
     justifyContent: "space-between",
     marginRight: "auto",
-  },
-  bar: {
-    borderBottomWidth: 1,
-    marginTop: 4,
-    marginBottom: 12,
   },
 });

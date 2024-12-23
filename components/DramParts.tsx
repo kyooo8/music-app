@@ -1,6 +1,5 @@
 import React, { useContext, useCallback } from "react";
 import { View, StyleSheet, TouchableOpacity } from "react-native";
-import { Colors } from "@/constants/Colors";
 import { MusicContext } from "@/context/MusicContext";
 import {
   cellheight,
@@ -10,11 +9,8 @@ import {
 } from "@/constants/Style";
 import { useThemeColor } from "@/hooks/useThemeColor";
 import { Audio } from "expo-av";
-import {
-  dramInstruments,
-  fadeOutSound,
-  loadDramSound,
-} from "@/hooks/playMusicLogic";
+import { fadeOutSound } from "@/hooks/playMusicLogic";
+import { dramInstruments } from "@/hooks/drumPool";
 import { dramSoundsMap } from "@/constants/soundMaps";
 
 interface Props {
@@ -40,7 +36,7 @@ const DramParts = React.memo(({ note, chordIndex, noteIndex }: Props) => {
       await sound.loadAsync(soundFile);
       await sound.playAsync();
       setTimeout(async () => {
-        await fadeOutSound(sound, 1000);
+        await fadeOutSound(sound, 100);
       }, 800);
     } catch (error) {
       console.error("音楽再生エラー", error);

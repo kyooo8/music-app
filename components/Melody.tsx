@@ -162,14 +162,12 @@ const styles = StyleSheet.create({
   gridContainer: {
     flexDirection: "row",
     flex: 1,
-    marginBottom: 30,
   },
   noteLabelContainer: {
     width: 50,
   },
   noteLabelContent: {
     flexGrow: 1,
-    justifyContent: "flex-end",
   },
   noteLabel: {
     height: cellheight,

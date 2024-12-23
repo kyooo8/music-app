@@ -31,7 +31,6 @@ export default function MelobassPage() {
 
   return (
     <ThemedView style={{ flex: 1 }}>
-      <HeaderBottom input={true} />
       <View style={[styles.selecter, { backgroundColor: tab }]}>
         <TouchableOpacity
           onPress={() => setMode("melody")}
@@ -82,7 +81,7 @@ export default function MelobassPage() {
 const styles = StyleSheet.create({
   selecter: {
     flexDirection: "row",
-    marginTop: -48,
+    marginTop: 60,
     marginRight: 10,
     marginBottom: 10,
     marginLeft: "auto",
