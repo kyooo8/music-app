@@ -13,8 +13,8 @@
 - React Native
 - Expo
 - Firebase
-  - FireAuth
-  - FireStorage
+  - Authentication
+  - Firestore Database
 
 ## 機能一覧
 
