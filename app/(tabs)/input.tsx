@@ -7,7 +7,6 @@ import { MusicContext } from "@/context/MusicContext";
 import { Icon } from "@/components/Icon";
 import { useThemeColor } from "@/hooks/useThemeColor";
 import { ThemedText } from "@/components/ThemedText";
-import { HeaderBottom } from "@/components/HeaderBottom";
 import DramPage from "@/components/Dram";
 
 type Mode = "melody" | "bass" | "dram";
@@ -81,7 +80,7 @@ export default function MelobassPage() {
 const styles = StyleSheet.create({
   selecter: {
     flexDirection: "row",
-    marginTop: 60,
+    marginTop: 30,
     marginRight: 10,
     marginBottom: 10,
     marginLeft: "auto",

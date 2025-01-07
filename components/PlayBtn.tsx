@@ -24,7 +24,7 @@ export const PlayBtn = () => {
   } = useMusicPlayer();
   const { playing } = useContext(MusicContext);
 
-  const bg = useThemeColor({}, "melody");
+  const bg = useThemeColor({}, "circle");
   const [modalVisible, setModalVisible] = useState(false);
 
   const [mOnly, setMOnly] = useState(false);

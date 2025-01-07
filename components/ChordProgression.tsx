@@ -155,7 +155,7 @@ export const ChordProgression = () => {
       >
         <View style={styles.modalContainer}>
           <View style={[styles.modal, { backgroundColor: tab }]}>
-            {(["major", "7", "add9", "m", "M7", "susu4"] as ChordShape[]).map(
+            {(["major", "m", "7", "M7", "add9", "susu4"] as ChordShape[]).map(
               (shape) => (
                 <TouchableOpacity
                   key={shape}
