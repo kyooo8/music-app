@@ -22,3 +22,11 @@
 - プロジェクト作成、削除機能
 - Circle 機能（コード進行）
 - Tone 機能（メロディー、ベース、ドラム）
+
+## 参考動画
+https://www.youtube.com/watch?v=HX0cYrNknN4&list=LL&index=36
+
+| 画面  |機能 |
+| ------------- | ------------- |
+| Content Cell  | Content Cell  |
+| Content Cell  | Content Cell  |
