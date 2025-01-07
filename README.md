@@ -29,9 +29,8 @@ https://www.youtube.com/watch?v=HX0cYrNknN4&list=LL&index=36
 
 ## 各画面
 
-|                                                               |                                                                 |
-| ------------------------------------------------------------- | --------------------------------------------------------------- |
 | トップ画面                                                    | circle 画面                                                     |
+| ------------------------------------------------------------- | --------------------------------------------------------------- |
 | <img src="/assets/images/top.jpg" alt="top" width="300"/>     | <img src="/assets/images/circle.jpg" alt="circle" width="300"/> |
 | コード進行選択（ダブルクリックでルート音、長押しでコード）    | コードの形変化（コード長押しでモーダル表示）                    |
 | <img src="/assets/images/chord.jpg" alt="chord" width="300"/> | <img src="/assets/images/shape.jpg" alt="shape" width="300"/>   |
