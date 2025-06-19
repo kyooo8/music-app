@@ -34,7 +34,7 @@ export default function TabLayout() {
       />
 
       <Tabs.Screen
-        name="singup"
+        name="signup"
         options={{
           title: "新規登録",
           headerTitleStyle: { color: text },

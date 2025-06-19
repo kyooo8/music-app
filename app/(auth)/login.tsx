@@ -68,7 +68,7 @@ export default function LoginPage() {
           <ThemedText style={styles.footerText}>
             まだ登録してませんか？
           </ThemedText>
-          <Link href={"/(auth)/singup"} asChild replace>
+          <Link href={"/(auth)/signup"} asChild replace>
             <TouchableOpacity>
               <ThemedText type="link" style={styles.footerLink}>
                 登録
