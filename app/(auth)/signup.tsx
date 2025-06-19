@@ -15,7 +15,7 @@ import { useThemeColor } from "@/hooks/useThemeColor";
 import { ThemedText } from "@/components/ThemedText";
 import { ThemedView } from "@/components/ThemedView";
 
-export default function SingupPage() {
+export default function SignupPage() {
   const tab = useThemeColor({}, "tab");
   const text = useThemeColor({}, "text");
 
