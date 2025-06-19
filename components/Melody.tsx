@@ -1,4 +1,4 @@
-// MelodyPage.tsx
+// Melody.tsx
 import React, { useContext, useEffect, useRef } from "react";
 import { ScrollView, View, StyleSheet } from "react-native";
 
