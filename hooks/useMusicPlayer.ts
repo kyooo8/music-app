@@ -62,7 +62,7 @@ export function useMusicPlayer() {
     } catch (err) {
       console.log("Playback error:", err);
     } finally {
-      setPlaying(true);
+      setPlaying(false);
     }
   };
 
