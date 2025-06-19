@@ -169,180 +169,153 @@ export async function playMusic(
 ) {
   const { bpm, melody, bass, dram, sortedMelodyNotes } = data;
 
-  // メロディ & ベースをロード
+  // BPM → 再生速度計算
+  const baseBpm = 120; // デフォルトBPM
+  const playbackRate = bpm / baseBpm;
+
+  // メロディ & ベース音源をプリロード
   const { melodySoundObjects, bassSoundObjects } = await preloadMelodyAndBass(
     data
   );
 
-  // ドラムは複数インスタンスプール
+  // ドラムプールを初期化
   await preloadDrumPools(3);
 
-  // データが空かどうか
-  const haveMelody = !!Object.keys(melody).length;
-  const haveBass = !!Object.keys(bass).length;
-  const haveDram = !!Object.keys(dram).length;
+  // 再生ループの初期化
+  const melodyBeatsPerMeasure = 4; // 4拍子
+  const stepsPerBeat = 4; // 16分音符
+  const stepsPerMeasure = melodyBeatsPerMeasure * stepsPerBeat;
+  const stepDuration = ((60 / bpm) * 1000) / stepsPerBeat; // ステップごとの間隔（ms）
 
-  // データを型アサーション
-  const melodyData = haveMelody
-    ? (melody as { [measure: number]: { [beat: number]: NoteData } })
-    : {};
-  const bassData = haveBass
-    ? (bass as { [measure: number]: { [beat: number]: NoteData } })
-    : {};
-  const dramData = haveDram
-    ? (dram as {
+  let currentMeasure = 0;
+  let currentStepInMeasure = 0;
+
+  const cleanup = () => {
+    // 音源リソースの解放
+    Object.values(melodySoundObjects).forEach((sound) => sound.unloadAsync());
+    Object.values(bassSoundObjects).forEach((sound) => sound.unloadAsync());
+    Object.values(drumPools).forEach((pool) => pool.unload());
+  };
+
+  const scheduleStep = () => {
+    if (!shouldContinue()) {
+      cleanup();
+      return;
+    }
+
+    const measure = currentMeasure;
+    const stepInMeasure = currentStepInMeasure;
+
+    // ドラム再生
+    if (options.playDram && isDramType(dram) && dram[measure]) {
+      const drumStep = dram[measure];
+      for (const instrument in drumStep) {
+        if (drumStep[instrument]?.[stepInMeasure]) {
+          const instrumentName = getDramInstrumentName(
+            parseInt(instrument, 10)
+          );
+          const pool = drumPools[instrumentName];
+          pool?.play();
+        }
+      }
+    }
+
+    // メロディ再生
+    if (
+      options.playMelody &&
+      melody &&
+      (melody as { [measure: number]: { [beat: number]: NoteData } })[measure]
+    ) {
+      const melodyData = melody as {
+        [measure: number]: { [beat: number]: NoteData };
+      };
+      const beatIndex = Math.floor(stepInMeasure / stepsPerBeat);
+      const melodyNote = melodyData[measure]?.[beatIndex];
+      if (melodyNote && melodyNote.relativePos !== null) {
+        const baseName = convertRelativeToNote(
+          melodyNote.relativePos,
+          sortedMelodyNotes
+        );
+        if (baseName) {
+          const fullName = getOctaveAdjustedNote(
+            baseName,
+            melodyNote.relativePos,
+            false,
+            sortedMelodyNotes
+          );
+          const sound = melodySoundObjects[fullName];
+          if (sound) {
+            // 再生速度と音程補正の指定
+            sound.setRateAsync(playbackRate, true); // shouldCorrectPitch = true
+            sound.playFromPositionAsync(0);
+          }
+        }
+      }
+    }
+
+    // ベース再生
+    if (
+      options.playBass &&
+      bass &&
+      (bass as { [measure: number]: { [beat: number]: NoteData } })[measure]
+    ) {
+      const bassData = bass as {
+        [measure: number]: { [beat: number]: NoteData };
+      };
+      const beatIndex = Math.floor(stepInMeasure / stepsPerBeat);
+      const bassNote = bassData[measure]?.[beatIndex];
+      if (bassNote && bassNote.relativePos !== null) {
+        const baseName = convertRelativeToNote(
+          bassNote.relativePos,
+          sortedMelodyNotes
+        );
+        if (baseName) {
+          const fullName = getOctaveAdjustedNote(
+            baseName,
+            bassNote.relativePos,
+            true,
+            sortedMelodyNotes
+          );
+          const sound = bassSoundObjects[fullName];
+          if (sound) {
+            // 再生速度と音程補正の指定
+            sound.setRateAsync(playbackRate, true); // shouldCorrectPitch = true
+            sound.playFromPositionAsync(0);
+          }
+        }
+      }
+    }
+
+    // 次ステップへ
+    currentStepInMeasure++;
+    if (currentStepInMeasure >= stepsPerMeasure) {
+      currentStepInMeasure = 0;
+      currentMeasure++;
+      if (currentMeasure >= Object.keys(melody).length) {
+        currentMeasure = 0; // 再ループ
+      }
+    }
+
+    setTimeout(scheduleStep, stepDuration);
+  };
+
+  scheduleStep();
+}
+
+function isDramType(
+  dram:
+    | {}
+    | {
         [measure: number]: {
           [instrument: number]: { [step: number]: boolean };
         };
-      })
-    : {};
-
-  // 1小節あたりの拍数、1拍あたりのステップ数
-  const melodyBeatsPerMeasure = 4; // 4拍子想定
-  const stepsPerBeat = 4; // 1拍を4分割(=16分音符)
-  const stepsPerMeasure = melodyBeatsPerMeasure * stepsPerBeat; // 16ステップ/小節
-
-  // 再生する小節数 (melody, bass, dram の最大小節数)
-  const melodyMeasures = haveMelody ? Object.keys(melody).length : 0;
-  const bassMeasures = haveBass ? Object.keys(bass).length : 0;
-  const dramMeasures = haveDram ? Object.keys(dram).length : 0;
-  const measureCount =
-    Math.max(melodyMeasures, bassMeasures, dramMeasures) || 1;
-
-  // BPM → 1拍=beatDuration ms → 1ステップ=stepDuration ms
-  const beatDuration = (60 / (bpm || 120)) * 1000;
-  const stepDuration = beatDuration / stepsPerBeat;
-
-  function playLoop() {
-    let currentMeasure = 0;
-    let currentStepInMeasure = 0; // 0..(stepsPerMeasure-1)
-
-    function scheduleStep() {
-      if (!shouldContinue()) {
-        cleanup();
-        return;
       }
-
-      const measure = currentMeasure;
-      const stepInMeasure = currentStepInMeasure;
-
-      // デバッグ用ログ
-      console.log(`Measure: ${measure}, Step: ${stepInMeasure}`);
-
-      // ドラム再生
-      if (options.playDram && haveDram && dramData[measure]) {
-        for (let instrument = 0; instrument < 10; instrument++) {
-          const isActive = dramData[measure][instrument]?.[stepInMeasure];
-          if (isActive) {
-            const instrumentName = getDramInstrumentName(instrument);
-            const pool = drumPools[instrumentName];
-
-            if (pool) {
-              pool
-                .play()
-                .then((soundInstance) => {
-                  // ドラム音が短いため、stopAsync() は不要
-                  // もし必要なら以下のコメントを解除
-                  /*
-                  setTimeout(async () => {
-                    try {
-                      await soundInstance.stopAsync();
-                    } catch (e) {
-                      console.log("stop error:", e);
-                    }
-                  }, stepDuration);
-                  */
-                })
-                .catch((err) => console.log("drum pool play error:", err));
-            }
-          }
-        }
-      }
-
-      // メロディ・ベース再生は「拍頭のみ」
-      if (stepInMeasure % stepsPerBeat === 0) {
-        const beatIndex = stepInMeasure / stepsPerBeat; // 0..3
-
-        // メロディ
-        if (options.playMelody && haveMelody && melodyData[measure]) {
-          const melodyNote = melodyData[measure][beatIndex];
-          if (melodyNote && melodyNote.relativePos !== null) {
-            const baseName = convertRelativeToNote(
-              melodyNote.relativePos,
-              sortedMelodyNotes
-            );
-            if (baseName) {
-              const fullName = getOctaveAdjustedNote(
-                baseName,
-                melodyNote.relativePos,
-                false,
-                sortedMelodyNotes
-              );
-              const sound = melodySoundObjects[fullName];
-              if (sound) {
-                sound.setPositionAsync(0);
-                sound.playAsync(); // 同期再生
-              }
-            }
-          }
-        }
-
-        // ベース
-        if (options.playBass && haveBass && bassData[measure]) {
-          const bassNote = bassData[measure][beatIndex];
-          if (bassNote && bassNote.relativePos !== null) {
-            const baseName = convertRelativeToNote(
-              bassNote.relativePos,
-              sortedMelodyNotes
-            );
-            if (baseName) {
-              const fullName = getOctaveAdjustedNote(
-                baseName,
-                bassNote.relativePos,
-                true,
-                sortedMelodyNotes
-              );
-              const sound = bassSoundObjects[fullName];
-              if (sound) {
-                sound.setPositionAsync(0);
-                sound.playAsync();
-              }
-            }
-          }
-        }
-      }
-
-      // 次ステップへ
-      currentStepInMeasure += 1;
-      if (currentStepInMeasure >= stepsPerMeasure) {
-        currentStepInMeasure = 0;
-        currentMeasure += 1;
-        if (currentMeasure >= measureCount) {
-          // ループ再生したいなら:
-          currentMeasure = 0;
-        }
-      }
-
-      if (shouldContinue()) {
-        setTimeout(scheduleStep, stepDuration);
-      } else {
-        cleanup();
-      }
-    }
-
-    scheduleStep();
-  }
-
-  function cleanup() {
-    // メロディ/ベース音源のアンロード
-    Object.values(melodySoundObjects).forEach((sound) => sound.unloadAsync());
-    Object.values(bassSoundObjects).forEach((sound) => sound.unloadAsync());
-
-    // ドラムプールのアンロード
-    for (const poolName of Object.keys(drumPools)) {
-      drumPools[poolName].unload();
-    }
-  }
-
-  playLoop();
+): dram is {
+  [measure: number]: { [instrument: number]: { [step: number]: boolean } };
+} {
+  return (
+    typeof dram === "object" &&
+    dram !== null &&
+    Object.keys(dram).every((key) => !isNaN(Number(key)))
+  );
 }

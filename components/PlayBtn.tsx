@@ -12,6 +12,7 @@ import { Icon } from "./Icon";
 import { useMusicPlayer } from "@/hooks/useMusicPlayer";
 import { useThemeColor } from "@/hooks/useThemeColor";
 import { MusicContext } from "@/context/MusicContext";
+import { transform } from "@babel/core";
 
 export const PlayBtn = () => {
   const {
@@ -44,9 +45,10 @@ export const PlayBtn = () => {
     <View style={styles.play}>
       <TouchableOpacity
         onPress={playing ? stop : play}
+        style={{ marginLeft: playing ? 0 : 8 }}
         onLongPress={() => setModalVisible(true)}
       >
-        <Icon name={playing ? "stop" : "play"} size={60} color={bg} />
+        <Icon name={playing ? "stop" : "play"} size={40} color={bg} />
       </TouchableOpacity>
       <Modal visible={modalVisible} transparent={true} animationType="fade">
         <View style={styles.modalContainer}>
